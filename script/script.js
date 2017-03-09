@@ -1,51 +1,94 @@
 var game = new Phaser.Game(800, 600, Phaser.AUTO, '', {preload: preload, create: create, update: update});
-var player;
 var starfield;
-var playerShots;
-var fireRate = 100;
-var nextFire = 0;
 var spacebar;
 var playerShot;
-var playerShotSound;
 var lives;
+var enemyHealth;
 var explodingTime = 0;
 
-var enemyGroup1;
-var enemyBullets;
+var bonusTimeout;
+
 var firingTimer = 0;
 var enemyExplode;
-var numberOfLivingEnemeies;
-var livingEnemies = [];
+var enemiesAlive;
+
+var activeEnemies;
+
+var numberOfKilledEnemyGroups = 0;
+var activeEnemyIndex = 0;
+var startNewEnemyGroup = false;
+var startNewEnemyGroupTime = 0;
 
 var stateText;
 var score = 0;
 var scoreString;
+var enemyLifeString;
+
+var music;
+var enemyTemplate;
+
+var bonusSound;
+var theBonus;
 
 function preload() {
+
     game.load.spritesheet('ship', 'images/spaceship.png', 43, 39, 9);
     game.load.spritesheet('enemyExplosion', 'images/explosion1.png', 64, 64);
+    game.load.spritesheet('bonusSprite', 'images/bonusBlob.png', 64, 64);
 
     game.load.image('lifeShip', 'images/lifeShip.png');
+    game.load.image('healthIcon', 'images/healthIcon.png');
+
     game.load.image('space', 'images/Space.png');
     game.load.image('playerShot', 'images/photonBomb1.png');
-    game.load.image('enemy1', 'images/enemy1small.png');
-    game.load.image('enemyBullet', 'images/enemyBullet1.png');
+    game.load.image('playerShotUpgrade', 'images/photonBomb2.png');
 
     game.load.audio('photonBomb', 'audio/photonBomb.wav');
-    game.load.audio('enemyExplode', 'audio/enemyExplode.wav');
+    game.load.audio('bonusSound', 'audio/weaponUpgrade2.wav');
+    game.load.audio('missionImpossible', 'audio/Mission_Impossible.mp3');
+
+
+    var allEnemyPics = ALL_ENEMIES.getAllPictures();
+    for(var i = 0; i < allEnemyPics.length; i++){
+        game.load.image(allEnemyPics[i].name, allEnemyPics[i].path);
+    }
+
+    var allEnemyBullets = ALL_ENEMIES.getAllBullets();
+    for(var i = 0; i < allEnemyBullets.length; i++){
+        game.load.image(allEnemyBullets[i].name, allEnemyBullets[i].path);
+    }
+
+    var allEnemySounds = ALL_ENEMIES.getAllSounds();
+    for(var i = 0; i < allEnemySounds.length; i++){
+        game.load.audio(allEnemySounds[i].name, allEnemySounds[i].path);
+    }
+
 
 }
 
 function create() {
+
     //  We're going to be using physics, so enable the Arcade Physics system
     game.physics.startSystem(Phaser.Physics.ARCADE);
 
     starfield = game.add.tileSprite(0, 0, 800, 600, 'space');
+
+    bonusSound = game.add.audio('bonusSound');
+
     PLAYER.init(game);
-    ENEMY.init(game);
+    ENEMY_SERVICE.init(game);
+    enemyTemplate = ALL_ENEMIES.getEnemy(0);
+    enemiesAlive = enemyTemplate.numbersAlive;
+
+    activeEnemies = ENEMY_SERVICE.createEnemy(enemyTemplate);
+
     //  Our controls.
     cursors = game.input.keyboard.createCursorKeys();
     spacebar = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+
+    //Music
+    music = game.add.audio('missionImpossible');
+    music.play();
 
     //  Lives
     lives = game.add.group();
@@ -65,185 +108,152 @@ function create() {
     stateText.anchor.setTo(0.5, 0.5);
     stateText.visible = false;
 
+    enemyLifeText = game.add.text(500, 10, ' ', { font: '24px Arial', fill: '#fff' });
+    enemyLifeText.anchor.setTo(0.5, 0.5);
+    enemyLifeText.visible = false;
+
+    enemyLifeString = '';
+
     scoreString = 'Score : ';
     scoreText = game.add.text(10, 10, scoreString + score, { font: '24px Arial', fill: '#fff' });
 
 
 }
 
-function initEnemies() {
-    // enemyGroup1 = game.add.group();
-    // enemyGroup1.enableBody = true;
-    // enemyGroup1.physicsBodyType = Phaser.Physics.ARCADE;
-    //
-    // // enemyGroup1.createMultiple(5, 'enemy1');
-    // numberOfLivingEnemeies = 5;
-    // enemyGroup1.setAll('anchor.x', 0.5);
-    // enemyGroup1.setAll('anchor.y', 0.5);
-    // enemyGroup1.setAll('scale.x', 0.5);
-    // enemyGroup1.setAll('scale.y', 0.5);
-    // enemyGroup1.setAll('outOfBoundsKill', true);
-    // enemyGroup1.setAll('checkWorldBounds', true);
-    //
-    // enemyExplode = game.add.audio('enemyExplode');
-    //
-    // var startX = [650, 630, 600, 630, 650];
-    // for(var i = 0; i< 5; i++){
-    //     // var tempEnemy = enemyGroup1.getFirstDead();
-    //     var tempEnemy = enemyGroup1.create(startX[i], 200 + i*50, 'enemy1');
-    //     // tempEnemy.reset(startX[i], 200 + i*50);
-    //     tempEnemy.scale.x = 0.7;
-    //     tempEnemy.scale.y = 0.7;
-    //     tempEnemy.body.velocity.x = -100;
-    //
-    // }
-    //
-    // enemyBullets = game.add.group();
-    // enemyBullets.enableBody = true;
-    // enemyBullets.physicsBodyType = Phaser.Physics.ARCADE;
-    // enemyBullets.createMultiple(30, 'enemyBullet');
-    // enemyBullets.setAll('anchor.x', 0.5);
-    // enemyBullets.setAll('anchor.y', 1);
-    // enemyBullets.setAll('outOfBoundsKill', true);
-    // enemyBullets.setAll('checkWorldBounds', true);
-
-
-
-}
-
-
 
 function update() {
 
     starfield.tilePosition.x -= 2;
 
-    //  Reset the players velocity (movement)
-    PLAYER.player.body.velocity.y = 0;
-    PLAYER.player.body.velocity.x = 0;
+    if(startNewEnemyGroup && game.time.now > startNewEnemyGroupTime){
+        enemyTemplate = ALL_ENEMIES.getEnemy(activeEnemyIndex);
+        enemiesAlive = enemyTemplate.numbersAlive;
+        activeEnemies = ENEMY_SERVICE.createEnemy(enemyTemplate);
+        startNewEnemyGroup = false;
+
+        if(activeEnemies.life){
+
+            enemyHealth = game.add.group();
+            for (var i = 0; i < activeEnemies.life; i++) {
+                var health = enemyHealth.create(game.world.width - 450 + (5 * i), 520, 'healthIcon');
+                health.anchor.setTo(0.5, 0.5);
+                health.scale.x = 0.7;
+                health.scale.y = 0.7;
+            }
+
+        }
+
+    }
 
     if(game.time.now > explodingTime && !PLAYER.player.visible && lives.countLiving() > 0){
-        PLAYER.player.x = game.world.width/2;
-        PLAYER.player.y = game.world.height/2;
+        // PLAYER.player.x = game.world.width/2;
+        // PLAYER.player.y = game.world.height/2;
+        PLAYER.player.x = 50;
+        PLAYER.player.y = 250;
         PLAYER.player.visible = true;
+        PLAYER.player.immortal = game.time.now + 2000;
     }
 
-    if (cursors.left.isDown && cursors.up.isDown) {
-        //  Move up and left
-        PLAYER.player.body.velocity.y = -150;
-        PLAYER.player.body.velocity.x = -150;
+    PLAYER.move(cursors);
 
-        PLAYER.player.animations.play('upLeft');
-    }
-    else if (cursors.left.isDown && cursors.down.isDown) {
-        //  Move down and left
-        PLAYER.player.body.velocity.y = 150;
-        PLAYER.player.body.velocity.x = -150;
-
-        PLAYER.player.animations.play('downLeft');
-    }
-    else if (cursors.right.isDown && cursors.down.isDown) {
-        //  Move down and right
-        PLAYER.player.body.velocity.y = 150;
-        PLAYER.player.body.velocity.x = 150;
-
-        PLAYER.player.animations.play('downRight');
-    }
-    else if (cursors.right.isDown && cursors.up.isDown) {
-        //  Move up and right
-        PLAYER.player.body.velocity.y = -150;
-        PLAYER.player.body.velocity.x = 150;
-        PLAYER.player.animations.play('upRight');
-    }
-    else if (cursors.right.isDown) {
-        //  Move right
-        PLAYER.player.body.velocity.x = 150;
-
-        PLAYER.player.animations.play('right');
-    }
-    else if (cursors.left.isDown) {
-        //  Move left
-        PLAYER.player.body.velocity.x = -150;
-
-        PLAYER.player.animations.play('left');
-    }
-    else if (cursors.up.isDown) {
-        //  Move up
-        PLAYER.player.body.velocity.y = -150;
-
-        PLAYER.player.animations.play('up');
-    }
-    else if (cursors.down.isDown) {
-        //  Move down
-        PLAYER.player.body.velocity.y = 150;
-
-        PLAYER.player.animations.play('down');
-    }
-    else {
-        //  Stand still
-        PLAYER.player.animations.stop();
-
-        PLAYER.player.frame = 5;
-    }
 
     if (spacebar.isDown) {
-        firePlayerShots();
+        PLAYER.firePlayerShots(game);
     }
 
-    if (game.time.now > firingTimer)
-    {
+    if (game.time.now > firingTimer) {
         enemyFires();
     }
 
-
-
     //  Run collision
-    game.physics.arcade.overlap(PLAYER.playerShots, ENEMY.group, collisionHandler, null, this);
-    game.physics.arcade.overlap(ENEMY.bullets, PLAYER.player, enemyHitsPlayer, null, this);
-    game.physics.arcade.overlap(ENEMY.group, PLAYER.player, enemyCollideWithPlayer, null, this);
+    game.physics.arcade.overlap(PLAYER.playerShots.shotGroup, activeEnemies.group, collisionHandler, null, this);
+    game.physics.arcade.overlap(activeEnemies.bullets, PLAYER.player, enemyHitsPlayer, null, this);
+    game.physics.arcade.overlap(activeEnemies.group, PLAYER.player, enemyCollideWithPlayer, null, this);
+    if(theBonus){
+        game.physics.arcade.overlap(theBonus, PLAYER.player, playerTakesBonus, null, this);
+    }
 
     checkEnemiesAlive();
-
-}
-
-function firePlayerShots() {
-
-    if (game.time.now > nextFire && PLAYER.playerShots.countDead() > 0) {
-        nextFire = game.time.now + fireRate;
-
-        var shot = PLAYER.playerShots.getFirstDead();
-
-        shot.reset(PLAYER.player.x + 40, PLAYER.player.y + 10);
-
-        // game.physics.arcade.moveToPointer(shot, 300);
-        shot.body.velocity.x = 500;
-        PLAYER.sound.play();
-    }
 
 }
 
 function collisionHandler(shot, enemy){
 
     shot.kill();
-    killEnemy(enemy);
+    console.log('shooting with damage:' + PLAYER.playerShots.shotGroup.damage);
+    killEnemy(enemy, PLAYER.playerShots.shotGroup.damage, shot);
 }
 
-function killEnemy(enemy){
-    enemy.kill();
+function killEnemy(enemy, damage, pos){
 
-    score += 100;
+    var killed = false;
+    if(activeEnemies.life && activeEnemies.life > 0){
+        // enemyLifeText.text = activeEnemies.life;
+        // enemyLifeText.visible = true;
+
+        activeEnemies.life = activeEnemies.life - damage;
+        for(var i = 0; i < damage; i++){
+            var health = enemyHealth.getFirstAlive();
+            if(health){
+                health.kill();
+            }
+        }
+        score += 100;
+    }
+    if(!activeEnemies.life || activeEnemies.life <= 0){
+        enemy.kill();
+        killed = true;
+    }
+
+    if(killed){
+        score += 100;
+        if(activeEnemies.extraScore){
+            score += activeEnemies.extraScore;
+        }
+
+    }
+
     scoreText.text = scoreString + score;
-    var explode = game.add.sprite(enemy.x, enemy.y, 'enemyExplosion');
-    explode.anchor.x = 0.5;
+    var explode = game.add.sprite(pos.x + 20, pos.y, 'enemyExplosion');
+    explode.anchor.x = 1.5;
     explode.anchor.y = 0.5;
     explode.animations.add('kaboom');
     explode.play('kaboom', 35, false, true);
-    ENEMY.explode.play();
+    activeEnemies.explode.play();
 
+    if(killed){
+        enemiesAlive--;
+        if(enemiesAlive === 0 && enemyTemplate.bonus){
+            theBonus = game.add.sprite(enemy.x, enemy.y, 'bonusSprite');
+            theBonus.anchor.x = 0.5;
+            theBonus.anchor.y = 0.5;
+            theBonus.animations.add('bonus');
+            theBonus.play('bonus', 30, true, true);
+            game.physics.arcade.enable(theBonus);
+            theBonus.body.collideWorldBounds = true;
+
+            bonusTimeout = window.setTimeout(function () {
+                removeBonus();
+            }, 8000);
+
+        }
+    }
+
+}
+
+function removeBonus(){
+    theBonus.kill();
+    theBonus = undefined;
+    bonusTimeout = undefined;
 }
 
 function enemyHitsPlayer(player, bullet) {
 
     if(!player.visible){
+        return;
+    }
+    console.log('immortal?:' + (PLAYER.player.immortal ? 'yes to ' + PLAYER.player.immortal: 'no') + ' now:' + game.time.now);
+    if(PLAYER.player.immortal && PLAYER.player.immortal > game.time.now){
         return;
     }
 
@@ -263,7 +273,7 @@ function killPlayer(player){
     explode.anchor.y = 0.5;
     explode.animations.add('kaboom');
     explode.play('kaboom', 35, false, true);
-    ENEMY.explode.play();
+    activeEnemies.explode.play();
     player.visible = false;
     explodingTime = game.time.now + 1000;
 
@@ -271,7 +281,7 @@ function killPlayer(player){
     if (lives.countLiving() < 1)
     {
         player.kill();
-        ENEMY.bullets.callAll('kill');
+        activeEnemies.bullets.callAll('kill');
 
         stateText.text="GAME OVER";
         stateText.visible = true;
@@ -286,20 +296,46 @@ function enemyCollideWithPlayer(player, enemy){
         return;
     }
     killPlayer(player);
-    killEnemy(enemy);
+    killEnemy(enemy, 1, player);
 
 
+}
+
+function playerTakesBonus(bonus, player){
+        window.clearTimeout(bonusTimeout);
+        bonusSound.play();
+            PLAYER.upgradeShot({upgradeNumber: 1});
+        bonus.kill();
+        bonus = undefined;
 }
 
 function enemyFires () {
 
     //  Grab the first bullet we can from the pool
-    enemyBullet = ENEMY.bullets.getFirstExists(false);
+    enemyBullet = activeEnemies.bullets.getFirstExists(false);
 
-    livingEnemies.length=0;
+    var livingEnemies = [];
 
-    ENEMY.group.forEachAlive(function(enemy){
+    activeEnemies.group.forEachAlive(function(enemy){
         livingEnemies.push(enemy);
+
+        if(activeEnemies.stay && enemy.body.x <= game.world.width/2 &&
+            enemy.body.velocity.x !== 0 && !enemy.hasStopped){
+            enemy.body.oldvelocity = enemy.body.velocity.x;
+            enemy.body.velocity.x = 0;
+            enemy.timeToMove = game.time.now + activeEnemies.timeToStay;
+            enemy.hasStopped = true;
+            // console.log(enemy.name + ' has stopped:' + (enemy.timeToMove - 4000) + ' and shall start:' + enemy.timeToMove);
+        }
+        else if(activeEnemies.stay && enemy.hasStopped && enemy.timeToMove < game.time.now){
+            // console.log(enemy.name + ' shall start again and time is:' + game.time.now);
+            enemy.body.velocity.x = enemy.body.oldvelocity;
+            enemy.timeToMove = 0;
+        }
+        // else if(activeEnemies.stay && enemy.hasStopped){
+            // console.log(enemy.name + ' has stopped:' + (enemy.timeToMove - 4000) + ' and shall start:' + enemy.timeToMove + ' and time is:' + game.time.now);
+        // }
+
     });
 
 
@@ -310,15 +346,19 @@ function enemyFires () {
         // And fire the bullet from this enemy
         enemyBullet.reset(shooter.body.x, shooter.body.y);
 
-        game.physics.arcade.moveToObject(enemyBullet,PLAYER.player,120);
-        firingTimer = game.time.now + 2000;
+        game.physics.arcade.moveToObject(enemyBullet,PLAYER.player,activeEnemies.bulletSpeed);
+        firingTimer = game.time.now + activeEnemies.firingSpeed;
     }
+
+
 
 }
 
 function checkEnemiesAlive(){
-    livingEnemies.length = 0;
-    ENEMY.group.forEachAlive(function(enemy){
+    var livingEnemies = [];
+
+
+    activeEnemies.group.forEachAlive(function(enemy){
         if(enemy.x < -100){
             enemy.kill();
         }
@@ -329,8 +369,22 @@ function checkEnemiesAlive(){
     });
 
     if(livingEnemies.length == 0){
-        stateText.text="You won!";
-        stateText.visible = true;
+
+        if(!startNewEnemyGroup){
+            numberOfKilledEnemyGroups++;
+            if(ALL_ENEMIES.getNumberOfEnemies <= numberOfKilledEnemyGroups){
+                // console.log('number of enemies:' + ALL_ENEMIES.getNumberOfEnemies + ' killed enemies:' + numberOfKilledEnemyGroups);
+                stateText.text="You won!";
+                stateText.visible = true;
+                startNewEnemyGroup = false;
+            }
+            else{
+                startNewEnemyGroup = true;
+                startNewEnemyGroupTime = game.time.now + 3000;
+                activeEnemyIndex++;
+            }
+
+        }
 
     }
 }

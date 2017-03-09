@@ -6,9 +6,10 @@ var ENEMY = (function () {
         group: undefined,
         explode: undefined,
         bullets: undefined,
-        numbersAlive: undefined
+        numbersAlive: undefined,
+        bulletSpeed: undefined,
+        firingSpeed: undefined
     };
-
 
     function init(game){
         self.group = game.add.group();
