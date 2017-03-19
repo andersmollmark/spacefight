@@ -135,7 +135,7 @@ ALL_ENEMIES = (function () {
         numbersAlive: 1,
         explodeName: allSounds[0].name,
         startXpos: [1430],
-        startYpos: 250,
+        startYpos: 200,
         yDistance: 50,
         pictureName: allPictures[4].name,
         picturePath: allPictures[4].path,
@@ -150,10 +150,15 @@ ALL_ENEMIES = (function () {
         groupXScale: 1,
         groupYScale: 1,
         bonus: false,
+        bonusLife: true,
         stay: true,
         timeToStay: 50000,
-        life: 80,
-        extraScore: 2000
+        life: 8,
+        extraScore: 2000,
+        extraMovement: true,
+        stayX: 550,
+        moveUpY: 100,
+        moveDownY: 300
     };
 
     //
@@ -162,7 +167,7 @@ ALL_ENEMIES = (function () {
     // };
 
     var privateAPI = {
-        enemyArray: [enemy1, enemy3, boss1]
+        enemyArray: [enemy1, boss1]
     };
 
     var service = {

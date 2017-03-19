@@ -1,50 +1,83 @@
-var ENEMY = (function () {
+function Enemy() {
+
+    var me = undefined;
+    var group = undefined;
+    var numbersAlive = undefined;
+    var explode = undefined;
+    var bullets = undefined;
+    var bulletSpeed = undefined;
+    var firingSpeed = undefined;
+
 
     var self = {
         init: init,
-        sound: undefined,
-        group: undefined,
-        explode: undefined,
-        bullets: undefined,
-        numbersAlive: undefined,
-        bulletSpeed: undefined,
-        firingSpeed: undefined
     };
 
-    function init(game){
-        self.group = game.add.group();
-        self.group.enableBody = true;
-        self.group.physicsBodyType = Phaser.Physics.ARCADE;
+    function init(template, game) {
+        this.me = template;
 
-        self.numbersAlive = 5;
-        self.group.setAll('anchor.x', 0.5);
-        self.group.setAll('anchor.y', 0.5);
-        self.group.setAll('scale.x', 0.5);
-        self.group.setAll('scale.y', 0.5);
-        self.group.setAll('outOfBoundsKill', true);
-        self.group.setAll('checkWorldBounds', true);
+        this.group = game.add.group();
+        this.group.enableBody = true;
+        this.group.physicsBodyType = Phaser.Physics.ARCADE;
 
-        self.explode = game.add.audio('enemyExplode');
+        this.numbersAlive = enemyTemplate.numbersAlive;
+        this.group.setAll('anchor.x', 0.5);
+        this.group.setAll('anchor.y', 0.5);
+        this.group.setAll('scale.x', enemyTemplate.groupXScale);
+        this.group.setAll('scale.y', enemyTemplate.groupYScale);
+        this.group.setAll('outOfBoundsKill', true);
+        this.group.setAll('checkWorldBounds', true);
 
-        var startX = [650, 630, 600, 630, 650];
-        for(var i = 0; i< 5; i++){
-            var tempEnemy = self.group.create(startX[i], 200 + i*50, 'enemy1');
-            tempEnemy.scale.x = 0.7;
-            tempEnemy.scale.y = 0.7;
-            tempEnemy.body.velocity.x = -100;
+        this.explode = game.add.audio(enemyTemplate.explodeName);
+
+        var startX = enemyTemplate.startXpos;
+        for (var i = 0; i < enemyTemplate.numbersAlive; i++) {
+            var tempEnemy = this.group.create(startX[i], enemyTemplate.startYpos + i * enemyTemplate.yDistance, enemyTemplate.pictureName);
+            tempEnemy.scale.x = enemyTemplate.xScale;
+            tempEnemy.scale.y = enemyTemplate.yScale;
+            tempEnemy.body.velocity.x = enemyTemplate.xSpeed;
+            tempEnemy.name = 'nisse' + i;
 
         }
 
-        self.bullets = game.add.group();
-        self.bullets.enableBody = true;
-        self.bullets.physicsBodyType = Phaser.Physics.ARCADE;
-        self.bullets.createMultiple(30, 'enemyBullet');
-        self.bullets.setAll('anchor.x', 0.5);
-        self.bullets.setAll('anchor.y', 1);
-        self.bullets.setAll('outOfBoundsKill', true);
-        self.bullets.setAll('checkWorldBounds', true);
+        this.bullets = game.add.group();
+        this.bullets.enableBody = true;
+        this.bullets.physicsBodyType = Phaser.Physics.ARCADE;
+        this.bullets.createMultiple(enemyTemplate.numberOfBullets, enemyTemplate.bulletName);
+        this.bullets.setAll('anchor.x', 0.5);
+        this.bullets.setAll('anchor.y', 1);
+        this.bullets.setAll('outOfBoundsKill', true);
+        this.bullets.setAll('checkWorldBounds', true);
+        this.bulletSpeed = enemyTemplate.bulletSpeed;
+        this.firingSpeed = enemyTemplate.firingSpeed;
+        this.stay = enemyTemplate.stay;
+        this.timeToStay = enemyTemplate.timeToStay;
+        this.life = enemyTemplate.life;
+        this.damage = enemyTemplate.damage;
+        this.extraScore = enemyTemplate.extraScore;
+
+        this.extraMovement = enemyTemplate.extraMovement;
+        this.stayX = enemyTemplate.stayX;
+        this.moveUpY = enemyTemplate.moveUpY;
+        this.moveDownY = enemyTemplate.moveDownY;
+
+    }
+
+    function update(game, enemySprite) {
+
+
+    }
+
+    function shallStay(game, enemySprite) {
+        var me = this.me;
+        if (me.stay) {
+            if (me.stayX && me.stayX <= enemySprite.x) {
+                me.oldvelocity = me.velocity.x;
+                me.velocity.x = 0;
+            }
+        }
     }
 
     return self;
 
-}());
+};

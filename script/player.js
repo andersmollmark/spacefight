@@ -2,7 +2,14 @@ var PLAYER = (function () {
 
     var privateAPI = {
         nextFire: 0,
-        activeShotDesc: 0
+        activeShotDesc: 0,
+        immortalTimeout: undefined,
+        blinkTimeout: undefined,
+        explodingTimeout: undefined,
+        setImmortal: _setImmortal,
+        resetPlayer: _resetPlayer,
+        blinkPlayer: _blinkPlayer,
+        immortal: false
     };
 
     var shotDesc = [
@@ -46,7 +53,11 @@ var PLAYER = (function () {
         move: move,
         upgradeShot: upgradeShot,
         createShotgroup: createShotgroup,
-        firePlayerShots: firePlayerShots
+        firePlayerShots: firePlayerShots,
+        isTemporaryImmortal: isTemporaryImmortal,
+        setTemporaryImmortal: setTemporaryImmortal,
+        setVisible: setVisible,
+        isVisible: isVisible
     };
 
 
@@ -78,7 +89,6 @@ var PLAYER = (function () {
 
         self.player.animations.add('left', [5], 10, true);
         self.player.animations.add('right', [4], 10, true);
-        self.player.visible = true;
 
     }
 
@@ -197,6 +207,56 @@ var PLAYER = (function () {
 
             self.player.frame = 5;
         }
+    }
+
+    function setTemporaryImmortal(explodingTime){
+        privateAPI.setImmortal(true);
+        self.player.visible = false;
+        privateAPI.explodingTimeout = window.setTimeout(function () {
+            privateAPI.resetPlayer();
+        }, explodingTime);
+    }
+
+    function _resetPlayer(){
+        self.player.x = 50;
+        self.player.y = 250;
+        privateAPI.immortalTimeout = window.setTimeout(function () {
+            window.clearTimeout(privateAPI.blinkTimeout);
+            privateAPI.blinkTimeout = undefined;
+            self.player.visible = true;
+            privateAPI.setImmortal(false);
+            privateAPI.immortalTimeout = undefined;
+        }, 2000);
+
+        if(privateAPI.activeShotDesc > 0){
+            privateAPI.activeShotDesc--;
+            self.playerShots = shotDesc[privateAPI.activeShotDesc];
+        }
+        privateAPI.blinkPlayer();
+
+    }
+
+    function _blinkPlayer(){
+        privateAPI.blinkTimeout = window.setTimeout(function () {
+            self.player.visible = !self.player.visible;
+            privateAPI.blinkPlayer();
+        }, 100);
+    }
+
+    function _setImmortal(immortal){
+        privateAPI.immortal = immortal;
+    }
+
+    function setVisible(visible){
+        self.player.visible = visible;
+    }
+
+    function isVisible(){
+        return self.player.visible;
+    }
+
+    function isTemporaryImmortal() {
+        return !self.player.visible || privateAPI.immortal;
     }
 
     return self;

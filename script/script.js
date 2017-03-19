@@ -4,9 +4,9 @@ var spacebar;
 var playerShot;
 var lives;
 var enemyHealth;
-var explodingTime = 0;
 
 var bonusTimeout;
+var extraLifeTimeout;
 
 var firingTimer = 0;
 var enemyExplode;
@@ -30,11 +30,15 @@ var enemyTemplate;
 var bonusSound;
 var theBonus;
 
+var extraLife;
+
 function preload() {
 
     game.load.spritesheet('ship', 'images/spaceship.png', 43, 39, 9);
     game.load.spritesheet('enemyExplosion', 'images/explosion1.png', 64, 64);
     game.load.spritesheet('bonusSprite', 'images/bonusBlob.png', 64, 64);
+
+    game.load.spritesheet('bonusLife', 'images/bonusLifeBig.jpg', 29.5, 29.5);
 
     game.load.image('lifeShip', 'images/lifeShip.png');
     game.load.image('healthIcon', 'images/healthIcon.png');
@@ -92,17 +96,9 @@ function create() {
 
     //  Lives
     lives = game.add.group();
-    game.add.text(game.world.width - 100, 10, 'Lives : ', { font: '24px Arial', fill: '#fff' });
+    game.add.text(game.world.width - 200, 10, 'Lives : ', { font: '24px Arial', fill: '#fff' });
 
-    for (var i = 0; i < 3; i++)
-    {
-        var ship = lives.create(game.world.width - 100 + (30 * i), 60, 'lifeShip');
-        ship.anchor.setTo(0.5, 0.5);
-        ship.scale.x = 0.7;
-        ship.scale.y = 0.7;
-        // ship.angle = 90;
-        ship.alpha = 0.6;
-    }
+    createLiveShips(3);
 
     stateText = game.add.text(game.world.centerX,game.world.centerY,' ', { font: '84px Arial', fill: '#fff' });
     stateText.anchor.setTo(0.5, 0.5);
@@ -118,6 +114,19 @@ function create() {
     scoreText = game.add.text(10, 10, scoreString + score, { font: '24px Arial', fill: '#fff' });
 
 
+}
+
+function createLiveShips(numberOfShips){
+    console.log("number alive before:" + lives.countLiving());
+    for (var i = numberOfShips; i > 0; i--) {
+        var xpos = game.world.width - 230 + (30 * i);
+        console.log('adding life at :'+ xpos + ' and i=' + i);
+        var ship = lives.create(xpos, 60, 'lifeShip');
+        ship.anchor.setTo(0.5, 0.5);
+        ship.scale.x = 0.7;
+        ship.scale.y = 0.7;
+        ship.alpha = 0.6;
+    }
 }
 
 
@@ -145,17 +154,7 @@ function update() {
 
     }
 
-    if(game.time.now > explodingTime && !PLAYER.player.visible && lives.countLiving() > 0){
-        // PLAYER.player.x = game.world.width/2;
-        // PLAYER.player.y = game.world.height/2;
-        PLAYER.player.x = 50;
-        PLAYER.player.y = 250;
-        PLAYER.player.visible = true;
-        PLAYER.player.immortal = game.time.now + 2000;
-    }
-
     PLAYER.move(cursors);
-
 
     if (spacebar.isDown) {
         PLAYER.firePlayerShots(game);
@@ -165,32 +164,33 @@ function update() {
         enemyFires();
     }
 
-    //  Run collision
-    game.physics.arcade.overlap(PLAYER.playerShots.shotGroup, activeEnemies.group, collisionHandler, null, this);
-    game.physics.arcade.overlap(activeEnemies.bullets, PLAYER.player, enemyHitsPlayer, null, this);
+    //  Check collisions and bullets and finally if bonusblob
+    game.physics.arcade.overlap(PLAYER.playerShots.shotGroup, activeEnemies.group, shotHitsEnemy, null, this);
+    game.physics.arcade.overlap(activeEnemies.bullets, PLAYER.player, enemyShotHitsPlayer, null, this);
     game.physics.arcade.overlap(activeEnemies.group, PLAYER.player, enemyCollideWithPlayer, null, this);
     if(theBonus){
         game.physics.arcade.overlap(theBonus, PLAYER.player, playerTakesBonus, null, this);
+    }
+    if(extraLife){
+        game.physics.arcade.overlap(extraLife, PLAYER.player, playerGetsExtraLife, null, this);
     }
 
     checkEnemiesAlive();
 
 }
 
-function collisionHandler(shot, enemy){
+function shotHitsEnemy(shot, enemy){
 
     shot.kill();
-    console.log('shooting with damage:' + PLAYER.playerShots.shotGroup.damage);
+    // console.log('shooting with damage:' + PLAYER.playerShots.shotGroup.damage);
     killEnemy(enemy, PLAYER.playerShots.shotGroup.damage, shot);
 }
 
 function killEnemy(enemy, damage, pos){
 
+
     var killed = false;
     if(activeEnemies.life && activeEnemies.life > 0){
-        // enemyLifeText.text = activeEnemies.life;
-        // enemyLifeText.visible = true;
-
         activeEnemies.life = activeEnemies.life - damage;
         for(var i = 0; i < damage; i++){
             var health = enemyHealth.getFirstAlive();
@@ -214,8 +214,9 @@ function killEnemy(enemy, damage, pos){
     }
 
     scoreText.text = scoreString + score;
+    // console.log('enemy.x:' + enemy.x + ' enemy.y:' + enemy.y + ' shot.x:' + (pos.x + 35) + ' shot.y:' + pos.y);
     var explode = game.add.sprite(pos.x + 20, pos.y, 'enemyExplosion');
-    explode.anchor.x = 1.5;
+    explode.anchor.x = 0;
     explode.anchor.y = 0.5;
     explode.animations.add('kaboom');
     explode.play('kaboom', 35, false, true);
@@ -237,6 +238,21 @@ function killEnemy(enemy, damage, pos){
             }, 8000);
 
         }
+        else if(enemiesAlive === 0 && enemyTemplate.bonusLife){
+            extraLife = game.add.sprite(enemy.x, enemy.y, 'bonusLife');
+            extraLife.anchor.x = 0.5;
+            extraLife.anchor.y = 0.5;
+            extraLife.animations.add('extraLife');
+            extraLife.play('extraLife', 30, true, true);
+            game.physics.arcade.enable(extraLife);
+            extraLife.body.collideWorldBounds = true;
+
+            extraLifeTimeout = window.setTimeout(function () {
+                removeLife();
+            }, 8000);
+
+        }
+
     }
 
 }
@@ -247,22 +263,25 @@ function removeBonus(){
     bonusTimeout = undefined;
 }
 
-function enemyHitsPlayer(player, bullet) {
-
-    if(!player.visible){
-        return;
-    }
-    console.log('immortal?:' + (PLAYER.player.immortal ? 'yes to ' + PLAYER.player.immortal: 'no') + ' now:' + game.time.now);
-    if(PLAYER.player.immortal && PLAYER.player.immortal > game.time.now){
-        return;
-    }
-
-    bullet.kill();
-    killPlayer(player);
+function removeLife(){
+    extraLife.kill();
+    extraLife = undefined;
+    extraLifeTimeout = undefined;
 
 }
 
+function enemyShotHitsPlayer(player, bullet) {
+    bullet.kill();
+    killPlayer(player);
+}
+
 function killPlayer(player){
+
+    if(PLAYER.isTemporaryImmortal()){
+        console.log('immortal');
+        return;
+    }
+
     live = lives.getFirstAlive();
     if (live) {
         live.kill();
@@ -273,12 +292,11 @@ function killPlayer(player){
     explode.anchor.y = 0.5;
     explode.animations.add('kaboom');
     explode.play('kaboom', 35, false, true);
+    PLAYER.setVisible(false);
     activeEnemies.explode.play();
-    player.visible = false;
-    explodingTime = game.time.now + 1000;
 
     // When the player dies
-    if (lives.countLiving() < 1)
+    if (lives.countLiving() < 0)
     {
         player.kill();
         activeEnemies.bullets.callAll('kill');
@@ -286,27 +304,44 @@ function killPlayer(player){
         stateText.text="GAME OVER";
         stateText.visible = true;
 
-        //the "click to restart" handler
-        // game.input.onTap.addOnce(restart,this);
+    }
+    else{
+        PLAYER.setTemporaryImmortal(CONSTANT_SERVICE.EXPLODING_TIME);
     }
 }
 
 function enemyCollideWithPlayer(player, enemy){
-    if(!player.visible){
+    if(PLAYER.isTemporaryImmortal()){
         return;
     }
     killPlayer(player);
     killEnemy(enemy, 1, player);
-
-
 }
 
 function playerTakesBonus(bonus, player){
         window.clearTimeout(bonusTimeout);
         bonusSound.play();
-            PLAYER.upgradeShot({upgradeNumber: 1});
+        PLAYER.upgradeShot({upgradeNumber: 1});
         bonus.kill();
         bonus = undefined;
+}
+
+function playerGetsExtraLife(bonus, player){
+    window.clearTimeout(extraLifeTimeout);
+    bonusSound.play();
+
+    //recreate all live-ships
+    var newNumberOfLives = lives.countLiving() + 1;
+    while(lives.countLiving() > 0){
+        live = lives.getFirstAlive();
+        if (live) {
+            live.kill();
+        }
+    }
+
+    createLiveShips(newNumberOfLives);
+    extraLife.kill();
+    extraLife = undefined;
 }
 
 function enemyFires () {
@@ -319,27 +354,35 @@ function enemyFires () {
     activeEnemies.group.forEachAlive(function(enemy){
         livingEnemies.push(enemy);
 
-        if(activeEnemies.stay && enemy.body.x <= game.world.width/2 &&
-            enemy.body.velocity.x !== 0 && !enemy.hasStopped){
-            enemy.body.oldvelocity = enemy.body.velocity.x;
-            enemy.body.velocity.x = 0;
-            enemy.timeToMove = game.time.now + activeEnemies.timeToStay;
-            enemy.hasStopped = true;
-            // console.log(enemy.name + ' has stopped:' + (enemy.timeToMove - 4000) + ' and shall start:' + enemy.timeToMove);
+        if(activeEnemies.stay){
+            if(enemy.body.velocity.x !== 0 && !enemy.hasStopped){
+                if(activeEnemies.stayX && enemy.body.x <= activeEnemies.stayX){
+                    enemy.body.oldvelocity = enemy.body.velocity.x;
+                    enemy.body.velocity.x = 0;
+                    enemy.timeToMove = game.time.now + activeEnemies.timeToStay;
+                    enemy.hasStopped = true;
+                }
+                else if(!activeEnemies.stayX && enemy.body.x <= game.world.width/2){
+                    enemy.body.oldvelocity = enemy.body.velocity.x;
+                    enemy.body.velocity.x = 0;
+                    enemy.timeToMove = game.time.now + activeEnemies.timeToStay;
+                    enemy.hasStopped = true;
+                }
+
+
+            }
+            else if(enemy.hasStopped && enemy.timeToMove < game.time.now){
+                // console.log(enemy.name + ' shall start again and time is:' + game.time.now);
+                enemy.body.velocity.x = enemy.body.oldvelocity;
+                enemy.timeToMove = 0;
+            }
         }
-        else if(activeEnemies.stay && enemy.hasStopped && enemy.timeToMove < game.time.now){
-            // console.log(enemy.name + ' shall start again and time is:' + game.time.now);
-            enemy.body.velocity.x = enemy.body.oldvelocity;
-            enemy.timeToMove = 0;
-        }
-        // else if(activeEnemies.stay && enemy.hasStopped){
-            // console.log(enemy.name + ' has stopped:' + (enemy.timeToMove - 4000) + ' and shall start:' + enemy.timeToMove + ' and time is:' + game.time.now);
-        // }
+
 
     });
 
 
-    if (PLAYER.player.visible && enemyBullet && livingEnemies.length > 0) {
+    if (PLAYER.isVisible() && enemyBullet && livingEnemies.length > 0) {
         var random=game.rnd.integerInRange(0, livingEnemies.length-1);
         // randomly select one of them
         var shooter=livingEnemies[random];
