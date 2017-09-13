@@ -10,7 +10,7 @@ function Enemy() {
 
 
     var self = {
-        init: init,
+        init: init
     };
 
     function init(template, game) {

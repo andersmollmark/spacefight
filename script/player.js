@@ -9,41 +9,12 @@ var PLAYER = (function () {
         setImmortal: _setImmortal,
         resetPlayer: _resetPlayer,
         blinkPlayer: _blinkPlayer,
-        immortal: false
+        immortal: false,
+        CONSTANT_SERVICE: undefined,
+        createShotDescriptions: _createShotDescriptions
     };
 
-    var shotDesc = [
-        {
-            name: 'playerShot',
-            speed: 300,
-            xPos: [40],
-            yPos: [10],
-            shotGroup: undefined,
-            fireRate: 300,
-            numberOfShots: 1,
-            damage: 1
-        },
-        {
-            name: 'playerShotUpgrade',
-            speed: 500,
-            xPos: [40],
-            yPos: [10],
-            shotGroup: undefined,
-            fireRate: 200,
-            numberOfShots: 1,
-            damage: 2
-        },
-        {
-            name: 'playerShotUpgrade',
-            speed: 500,
-            xPos: [40, 40],
-            yPos: [25, 5],
-            shotGroup: undefined,
-            fireRate: 200,
-            numberOfShots: 2,
-            damage: 2
-        }
-    ];
+    var shotDesc;
 
     var self = {
         init: init,
@@ -61,7 +32,10 @@ var PLAYER = (function () {
     };
 
 
-    function init(game) {
+    function init(game, CONSTANT_SERVICE) {
+
+        privateAPI.CONSTANT_SERVICE = CONSTANT_SERVICE;
+        privateAPI.createShotDescriptions();
 
         // The player and its settings
         self.player = game.add.sprite(100, game.world.height - 150, 'ship');
@@ -76,7 +50,7 @@ var PLAYER = (function () {
         privateAPI.activeShotDesc = 0;
         self.playerShots = shotDesc[privateAPI.activeShotDesc];
 
-        self.sound = game.add.audio('photonBomb');
+        self.sound = game.add.audio(self.playerShots.sound);
 
         self.player.animations.add('upLeft', [2], 10, true);
         self.player.animations.add('downLeft', [8], 10, true);
@@ -117,8 +91,12 @@ var PLAYER = (function () {
         privateAPI.activeShotDesc++;
         console.log("upgrading shots to nr:" + privateAPI.activeShotDesc);
         console.log('number of shots before:' + self.playerShots.shotGroup.length);
-        self.playerShots = shotDesc[privateAPI.activeShotDesc];
-        console.log('number of shots after:' + self.playerShots.shotGroup.length);
+        if(privateAPI.activeShotDesc < shotDesc.length){
+            self.playerShots = shotDesc[privateAPI.activeShotDesc];
+            // self.playerShots = shotDesc[3];
+            self.sound = game.add.audio(self.playerShots.sound);
+            console.log('number of shots after:' + self.playerShots.shotGroup.length);
+        }
     }
 
 
@@ -257,6 +235,55 @@ var PLAYER = (function () {
 
     function isTemporaryImmortal() {
         return !self.player.visible || privateAPI.immortal;
+    }
+
+    function _createShotDescriptions(){
+        shotDesc = [
+            {
+                name: privateAPI.CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_NAME,
+                sound: privateAPI.CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_SOUND,
+                speed: 300,
+                xPos: [40],
+                yPos: [10],
+                shotGroup: undefined,
+                fireRate: 300,
+                numberOfShots: 1,
+                damage: 1
+            },
+            {
+                name: privateAPI.CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_UPGRADE_1_NAME,
+                sound: privateAPI.CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_SOUND,
+                speed: 500,
+                xPos: [40],
+                yPos: [10],
+                shotGroup: undefined,
+                fireRate: 200,
+                numberOfShots: 1,
+                damage: 2
+            },
+            {
+                name: privateAPI.CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_UPGRADE_2_NAME,
+                sound: privateAPI.CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_SOUND,
+                speed: 500,
+                xPos: [40, 40],
+                yPos: [25, 5],
+                shotGroup: undefined,
+                fireRate: 200,
+                numberOfShots: 2,
+                damage: 2
+            },
+            {
+                name: privateAPI.CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_UPGRADE_3_NAME,
+                sound: privateAPI.CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_3_SOUND,
+                speed: 500,
+                xPos: [40],
+                yPos: [3],
+                shotGroup: undefined,
+                fireRate: 200,
+                numberOfShots: 1,
+                damage: 6
+            }
+        ];
     }
 
     return self;

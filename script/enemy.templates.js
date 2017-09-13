@@ -161,14 +161,13 @@ ALL_ENEMIES = (function () {
         moveDownY: 300
     };
 
-    //
-    // var privateAPI = {
-    //     enemyArray: [enemy1, enemy2, enemy3, enemy2, enemy4, boss1]
-    // };
-
     var privateAPI = {
-        enemyArray: [enemy1, boss1]
+        enemyArray: [enemy1, enemy2, enemy3, enemy2, enemy4, boss1]
     };
+
+    // var privateAPI = {
+    //     enemyArray: [enemy1, boss1]
+    // };
 
     var service = {
         getAllPictures: getAllPictures,

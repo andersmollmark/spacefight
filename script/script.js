@@ -44,10 +44,13 @@ function preload() {
     game.load.image('healthIcon', 'images/healthIcon.png');
 
     game.load.image('space', 'images/Space.png');
-    game.load.image('playerShot', 'images/photonBomb1.png');
-    game.load.image('playerShotUpgrade', 'images/photonBomb2.png');
+    game.load.image(CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_NAME, CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_PNG);
+    game.load.image(CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_UPGRADE_1_NAME, CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_UPGRADE_1_PNG);
+    game.load.image(CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_UPGRADE_2_NAME, CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_UPGRADE_2_PNG);
+    game.load.image(CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_UPGRADE_3_NAME, CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_UPGRADE_3_PNG);
 
-    game.load.audio('photonBomb', 'audio/photonBomb.wav');
+    game.load.audio(CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_SOUND, 'audio/photonBomb.wav');
+    game.load.audio(CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_3_SOUND, 'audio/photonBomb3.wav');
     game.load.audio('bonusSound', 'audio/weaponUpgrade2.wav');
     game.load.audio('missionImpossible', 'audio/Mission_Impossible.mp3');
 
@@ -79,7 +82,7 @@ function create() {
 
     bonusSound = game.add.audio('bonusSound');
 
-    PLAYER.init(game);
+    PLAYER.init(game, CONSTANT_SERVICE);
     ENEMY_SERVICE.init(game);
     enemyTemplate = ALL_ENEMIES.getEnemy(0);
     enemiesAlive = enemyTemplate.numbersAlive;
@@ -92,7 +95,7 @@ function create() {
 
     //Music
     music = game.add.audio('missionImpossible');
-    music.play();
+    // music.play();
 
     //  Lives
     lives = game.add.group();
@@ -224,7 +227,8 @@ function killEnemy(enemy, damage, pos){
 
     if(killed){
         enemiesAlive--;
-        if(enemiesAlive === 0 && enemyTemplate.bonus){
+        // if(enemiesAlive === 0 && enemyTemplate.bonus){
+        if(enemiesAlive === 0){
             theBonus = game.add.sprite(enemy.x, enemy.y, 'bonusSprite');
             theBonus.anchor.x = 0.5;
             theBonus.anchor.y = 0.5;
