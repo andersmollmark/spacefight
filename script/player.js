@@ -11,7 +11,9 @@ var PLAYER = (function () {
         blinkPlayer: _blinkPlayer,
         immortal: false,
         CONSTANT_SERVICE: undefined,
-        createShotDescriptions: _createShotDescriptions
+        createShotDescriptions: _createShotDescriptions,
+        prepareForNewChapter: false,
+        createNewPlayer: _createNewPlayer
     };
 
     var shotDesc;
@@ -28,7 +30,8 @@ var PLAYER = (function () {
         isTemporaryImmortal: isTemporaryImmortal,
         setTemporaryImmortal: setTemporaryImmortal,
         setVisible: setVisible,
-        isVisible: isVisible
+        isVisible: isVisible,
+        resetPlayerForNewChapter: resetPlayerForNewChapter
     };
 
 
@@ -52,6 +55,7 @@ var PLAYER = (function () {
 
         self.sound = game.add.audio(self.playerShots.sound);
 
+        // TODO fix more generic adding of animations
         self.player.animations.add('upLeft', [2], 10, true);
         self.player.animations.add('downLeft', [8], 10, true);
 
@@ -124,66 +128,69 @@ var PLAYER = (function () {
 
 
     function move(cursors) {
-        //  Reset the players velocity (movement)
-        self.player.body.velocity.y = 0;
-        self.player.body.velocity.x = 0;
+        if(!privateAPI.prepareForNewChapter){
+            //  Reset the players velocity (movement)
+            self.player.body.velocity.y = 0;
+            self.player.body.velocity.x = 0;
 
-        if (cursors.left.isDown && cursors.up.isDown) {
-            //  Move up and left
-            self.player.body.velocity.y = -150;
-            self.player.body.velocity.x = -150;
+            if (cursors.left.isDown && cursors.up.isDown) {
+                //  Move up and left
+                self.player.body.velocity.y = -150;
+                self.player.body.velocity.x = -150;
 
-            self.player.animations.play('upLeft');
-        }
-        else if (cursors.left.isDown && cursors.down.isDown) {
-            //  Move down and left
-            self.player.body.velocity.y = 150;
-            self.player.body.velocity.x = -150;
+                self.player.animations.play('upLeft');
+            }
+            else if (cursors.left.isDown && cursors.down.isDown) {
+                //  Move down and left
+                self.player.body.velocity.y = 150;
+                self.player.body.velocity.x = -150;
 
-            self.player.animations.play('downLeft');
-        }
-        else if (cursors.right.isDown && cursors.down.isDown) {
-            //  Move down and right
-            self.player.body.velocity.y = 150;
-            self.player.body.velocity.x = 150;
+                self.player.animations.play('downLeft');
+            }
+            else if (cursors.right.isDown && cursors.down.isDown) {
+                //  Move down and right
+                self.player.body.velocity.y = 150;
+                self.player.body.velocity.x = 150;
 
-            self.player.animations.play('downRight');
-        }
-        else if (cursors.right.isDown && cursors.up.isDown) {
-            //  Move up and right
-            self.player.body.velocity.y = -150;
-            self.player.body.velocity.x = 150;
-            self.player.animations.play('upRight');
-        }
-        else if (cursors.right.isDown) {
-            //  Move right
-            self.player.body.velocity.x = 150;
+                self.player.animations.play('downRight');
+            }
+            else if (cursors.right.isDown && cursors.up.isDown) {
+                //  Move up and right
+                self.player.body.velocity.y = -150;
+                self.player.body.velocity.x = 150;
+                self.player.animations.play('upRight');
+            }
+            else if (cursors.right.isDown) {
+                //  Move right
+                self.player.body.velocity.x = 150;
 
-            self.player.animations.play('right');
-        }
-        else if (cursors.left.isDown) {
-            //  Move left
-            self.player.body.velocity.x = -150;
+                self.player.animations.play('right');
+            }
+            else if (cursors.left.isDown) {
+                //  Move left
+                self.player.body.velocity.x = -150;
 
-            self.player.animations.play('left');
-        }
-        else if (cursors.up.isDown) {
-            //  Move up
-            self.player.body.velocity.y = -150;
+                self.player.animations.play('left');
+            }
+            else if (cursors.up.isDown) {
+                //  Move up
+                self.player.body.velocity.y = -150;
 
-            self.player.animations.play('up');
-        }
-        else if (cursors.down.isDown) {
-            //  Move down
-            self.player.body.velocity.y = 150;
+                self.player.animations.play('up');
+            }
+            else if (cursors.down.isDown) {
+                //  Move down
+                self.player.body.velocity.y = 150;
 
-            self.player.animations.play('down');
-        }
-        else {
-            //  Stand still
-            self.player.animations.stop();
+                self.player.animations.play('down');
+            }
+            else {
+                //  Stand still
+                self.player.animations.stop();
 
-            self.player.frame = 5;
+                self.player.frame = 5;
+            }
+
         }
     }
 
@@ -191,13 +198,17 @@ var PLAYER = (function () {
         privateAPI.setImmortal(true);
         self.player.visible = false;
         privateAPI.explodingTimeout = window.setTimeout(function () {
-            privateAPI.resetPlayer();
+            privateAPI.createNewPlayer();
         }, explodingTime);
     }
 
-    function _resetPlayer(){
-        self.player.x = 50;
-        self.player.y = 250;
+    function resetPlayerForNewChapter(){
+        privateAPI.prepareForNewChapter = true;
+        privateAPI.resetPlayer();
+    }
+
+    function _createNewPlayer(){
+        privateAPI.resetPlayer();
         privateAPI.immortalTimeout = window.setTimeout(function () {
             window.clearTimeout(privateAPI.blinkTimeout);
             privateAPI.blinkTimeout = undefined;
@@ -212,6 +223,13 @@ var PLAYER = (function () {
         }
         privateAPI.blinkPlayer();
 
+    }
+
+    function _resetPlayer(){
+        self.player.x = 50;
+        self.player.y = 250;
+        self.player.body.velocity.x = 0;
+        self.player.body.velocity.y = 0;
     }
 
     function _blinkPlayer(){

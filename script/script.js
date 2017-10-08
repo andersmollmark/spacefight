@@ -1,5 +1,10 @@
 var game = new Phaser.Game(800, 600, Phaser.AUTO, '', {preload: preload, create: create, update: update});
-var starfield;
+var background = {
+    image: undefined,
+    xMovement: 0,
+    yMovement: 0
+};
+
 var spacebar;
 var playerShot;
 var lives;
@@ -20,6 +25,7 @@ var startNewEnemyGroup = false;
 var startNewEnemyGroupTime = 0;
 
 var stateText;
+var newChapterText;
 var score = 0;
 var scoreString;
 var enemyLifeString;
@@ -32,11 +38,18 @@ var theBonus;
 
 var extraLife;
 
+var newChapter = {
+    active: false,
+    group: undefined
+};
+
 function preload() {
 
     game.load.spritesheet('ship', 'images/spaceship.png', 43, 39, 9);
     game.load.spritesheet('enemyExplosion', 'images/explosion1.png', 64, 64);
     game.load.spritesheet('bonusSprite', 'images/bonusBlob.png', 64, 64);
+
+    game.load.spritesheet('hero', 'images/hero2.png', 30, 40);
 
     game.load.spritesheet('bonusLife', 'images/bonusLifeBig.jpg', 29.5, 29.5);
 
@@ -44,6 +57,8 @@ function preload() {
     game.load.image('healthIcon', 'images/healthIcon.png');
 
     game.load.image('space', 'images/Space.png');
+    game.load.image('desert', 'images/desert1_big.png');
+
     game.load.image(CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_NAME, CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_PNG);
     game.load.image(CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_UPGRADE_1_NAME, CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_UPGRADE_1_PNG);
     game.load.image(CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_UPGRADE_2_NAME, CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_UPGRADE_2_PNG);
@@ -54,6 +69,7 @@ function preload() {
     game.load.audio('bonusSound', 'audio/weaponUpgrade2.wav');
     game.load.audio('missionImpossible', 'audio/Mission_Impossible.mp3');
 
+    game.load.image('chapter2', 'images/chapter2_mars.png');
 
     var allEnemyPics = ALL_ENEMIES.getAllPictures();
     for(var i = 0; i < allEnemyPics.length; i++){
@@ -78,7 +94,8 @@ function create() {
     //  We're going to be using physics, so enable the Arcade Physics system
     game.physics.startSystem(Phaser.Physics.ARCADE);
 
-    starfield = game.add.tileSprite(0, 0, 800, 600, 'space');
+    background.image = game.add.tileSprite(0, 0, 800, 600, 'space');
+    background.xMovement = 2;
 
     bonusSound = game.add.audio('bonusSound');
 
@@ -106,6 +123,11 @@ function create() {
     stateText = game.add.text(game.world.centerX,game.world.centerY,' ', { font: '84px Arial', fill: '#fff' });
     stateText.anchor.setTo(0.5, 0.5);
     stateText.visible = false;
+
+    newChapterText = game.add.text(game.world.centerX,game.world.centerY,' ', { font: '30px Arial', fill: '#fff' });
+    newChapterText.anchor.setTo(0.5, 0.5);
+    newChapterText.visible = false;
+
 
     enemyLifeText = game.add.text(500, 10, ' ', { font: '24px Arial', fill: '#fff' });
     enemyLifeText.anchor.setTo(0.5, 0.5);
@@ -135,51 +157,57 @@ function createLiveShips(numberOfShips){
 
 function update() {
 
-    starfield.tilePosition.x -= 2;
+    if(newChapter.active){
+        game.physics.arcade.overlap(newChapter.group, PLAYER.player, startNewChapter, null, this);
+    }
+    else {
+        background.image.tilePosition.x -= background.xMovement;
+        background.image.tilePosition.y -= background.yMovement;
 
-    if(startNewEnemyGroup && game.time.now > startNewEnemyGroupTime){
-        enemyTemplate = ALL_ENEMIES.getEnemy(activeEnemyIndex);
-        enemiesAlive = enemyTemplate.numbersAlive;
-        activeEnemies = ENEMY_SERVICE.createEnemy(enemyTemplate);
-        startNewEnemyGroup = false;
+        if (startNewEnemyGroup && game.time.now > startNewEnemyGroupTime) {
+            enemyTemplate = ALL_ENEMIES.getEnemy(activeEnemyIndex);
+            enemiesAlive = enemyTemplate.numbersAlive;
+            activeEnemies = ENEMY_SERVICE.createEnemy(enemyTemplate);
+            startNewEnemyGroup = false;
 
-        if(activeEnemies.life){
+            if (activeEnemies.life) {
 
-            enemyHealth = game.add.group();
-            for (var i = 0; i < activeEnemies.life; i++) {
-                var health = enemyHealth.create(game.world.width - 450 + (5 * i), 520, 'healthIcon');
-                health.anchor.setTo(0.5, 0.5);
-                health.scale.x = 0.7;
-                health.scale.y = 0.7;
+                enemyHealth = game.add.group();
+                for (var i = 0; i < activeEnemies.life; i++) {
+                    var health = enemyHealth.create(game.world.width - 450 + (5 * i), 520, 'healthIcon');
+                    health.anchor.setTo(0.5, 0.5);
+                    health.scale.x = 0.7;
+                    health.scale.y = 0.7;
+                }
+
             }
 
         }
 
+        PLAYER.move(cursors);
+
+        if (spacebar.isDown) {
+            PLAYER.firePlayerShots(game);
+        }
+
+        if (game.time.now > firingTimer) {
+            enemyFires();
+        }
+
+        //  Check collisions and bullets and finally if bonusblob
+        game.physics.arcade.overlap(PLAYER.playerShots.shotGroup, activeEnemies.group, shotHitsEnemy, null, this);
+        game.physics.arcade.overlap(activeEnemies.bullets, PLAYER.player, enemyShotHitsPlayer, null, this);
+        game.physics.arcade.overlap(activeEnemies.group, PLAYER.player, enemyCollideWithPlayer, null, this);
+
+        if (theBonus) {
+            game.physics.arcade.overlap(theBonus, PLAYER.player, playerTakesBonus, null, this);
+        }
+        if (extraLife) {
+            game.physics.arcade.overlap(extraLife, PLAYER.player, playerGetsExtraLife, null, this);
+        }
+
+        checkEnemiesAlive();
     }
-
-    PLAYER.move(cursors);
-
-    if (spacebar.isDown) {
-        PLAYER.firePlayerShots(game);
-    }
-
-    if (game.time.now > firingTimer) {
-        enemyFires();
-    }
-
-    //  Check collisions and bullets and finally if bonusblob
-    game.physics.arcade.overlap(PLAYER.playerShots.shotGroup, activeEnemies.group, shotHitsEnemy, null, this);
-    game.physics.arcade.overlap(activeEnemies.bullets, PLAYER.player, enemyShotHitsPlayer, null, this);
-    game.physics.arcade.overlap(activeEnemies.group, PLAYER.player, enemyCollideWithPlayer, null, this);
-    if(theBonus){
-        game.physics.arcade.overlap(theBonus, PLAYER.player, playerTakesBonus, null, this);
-    }
-    if(extraLife){
-        game.physics.arcade.overlap(extraLife, PLAYER.player, playerGetsExtraLife, null, this);
-    }
-
-    checkEnemiesAlive();
-
 }
 
 function shotHitsEnemy(shot, enemy){
@@ -421,9 +449,11 @@ function checkEnemiesAlive(){
             numberOfKilledEnemyGroups++;
             if(ALL_ENEMIES.getNumberOfEnemies <= numberOfKilledEnemyGroups){
                 // console.log('number of enemies:' + ALL_ENEMIES.getNumberOfEnemies + ' killed enemies:' + numberOfKilledEnemyGroups);
-                stateText.text="You won!";
-                stateText.visible = true;
-                startNewEnemyGroup = false;
+                // stateText.text="You won!";
+                // stateText.visible = true;
+                // startNewEnemyGroup = false;
+
+                prepareNewChapter(1); // TODO how to switch between chapters
             }
             else{
                 startNewEnemyGroup = true;
@@ -435,3 +465,34 @@ function checkEnemiesAlive(){
 
     }
 }
+
+function prepareNewChapter(chapterNo){
+    newChapterText.text="Land on mars and destroy enemy base";
+    newChapterText.visible = true;
+    startNewEnemyGroup = false;
+
+    PLAYER.resetPlayerForNewChapter();
+    newChapter.active = true;
+    newChapter.group = game.add.group();
+    newChapter.group.enableBody = true;
+    newChapter.group.physicsBodyType = Phaser.Physics.ARCADE;
+
+    var chapter = newChapter.group.create(900, 10, 'chapter2');
+    chapter.scale.x = 1;
+    chapter.scale.y = 1;
+    chapter.body.velocity.x = -100;
+
+}
+
+function startNewChapter() {
+    newChapter.active = false;
+    newChapterText.text="";
+    newChapterText.visible = false;
+    startNewEnemyGroup = true;
+    background.image = game.add.tileSprite(0, 0, 800, 600, 'desert');
+    background.image.tileScale.x = 1.7;
+    background.xMovement = 0;
+    background.yMovement = -0.5;
+
+}
+
