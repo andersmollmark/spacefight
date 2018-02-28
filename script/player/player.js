@@ -2,7 +2,6 @@ var PLAYER = (function () {
 
     var privateAPI = {
         nextFire: 0,
-        activeShotDesc: 0,
         immortalTimeout: undefined,
         blinkTimeout: undefined,
         explodingTimeout: undefined,
@@ -11,21 +10,16 @@ var PLAYER = (function () {
         blinkPlayer: _blinkPlayer,
         immortal: false,
         CONSTANT_SERVICE: undefined,
-        createShotDescriptions: _createShotDescriptions,
         prepareForNewChapter: false,
         createNewPlayer: _createNewPlayer
     };
-
-    var shotDesc;
 
     var self = {
         init: init,
         player: undefined,
         playerShots: undefined,
-        sound: undefined,
         move: move,
         upgradeShot: upgradeShot,
-        createShotgroup: createShotgroup,
         firePlayerShots: firePlayerShots,
         isTemporaryImmortal: isTemporaryImmortal,
         setTemporaryImmortal: setTemporaryImmortal,
@@ -38,7 +32,6 @@ var PLAYER = (function () {
     function init(game, CONSTANT_SERVICE) {
 
         privateAPI.CONSTANT_SERVICE = CONSTANT_SERVICE;
-        privateAPI.createShotDescriptions();
 
         // The player and its settings
         self.player = game.add.sprite(100, game.world.height - 150, 'ship');
@@ -47,13 +40,8 @@ var PLAYER = (function () {
         game.physics.arcade.enable(self.player);
         self.player.body.collideWorldBounds = true;
 
-        for (var i = 0; i < shotDesc.length; i++) {
-            self.createShotgroup(shotDesc[i], game);
-        }
-        privateAPI.activeShotDesc = 0;
-        self.playerShots = shotDesc[privateAPI.activeShotDesc];
-
-        self.sound = game.add.audio(self.playerShots.sound);
+        SHOTS.init(game);
+        self.playerShots = SHOTS.getPlayerShots();
 
         // TODO fix more generic adding of animations
         self.player.animations.add('upLeft', [2], 10, true);
@@ -70,60 +58,15 @@ var PLAYER = (function () {
 
     }
 
-    function createShotgroup(shotDesc, game) {
-
-        shotDesc.shotGroup = [];
-        for (var i = 0; i < shotDesc.numberOfShots; i++) {
-            shotDesc.shotGroup[i] = game.add.group();
-            shotDesc.shotGroup[i].enableBody = true;
-            shotDesc.shotGroup[i].physicsBodyType = Phaser.Physics.ARCADE;
-
-            shotDesc.shotGroup[i].createMultiple(50, shotDesc.name);
-            shotDesc.shotGroup[i].setAll('checkWorldBounds', true);
-            shotDesc.shotGroup[i].setAll('outOfBoundsKill', true);
-            shotDesc.shotGroup[i].shotSpeed = shotDesc.speed;
-            shotDesc.shotGroup[i].numberOfShots = shotDesc.numberOfShots;
-            shotDesc.shotGroup[i].fireRate = shotDesc.fireRate;
-            shotDesc.shotGroup[i].xPos = shotDesc.xPos[i];
-            shotDesc.shotGroup[i].yPos = shotDesc.yPos[i];
-            shotDesc.shotGroup.damage = shotDesc.damage;
-
-        }
-    }
-
     function upgradeShot() {
-        privateAPI.activeShotDesc++;
-        console.log("upgrading shots to nr:" + privateAPI.activeShotDesc);
         console.log('number of shots before:' + self.playerShots.shotGroup.length);
-        if(privateAPI.activeShotDesc < shotDesc.length){
-            self.playerShots = shotDesc[privateAPI.activeShotDesc];
-            // self.playerShots = shotDesc[3];
-            self.sound = game.add.audio(self.playerShots.sound);
-            console.log('number of shots after:' + self.playerShots.shotGroup.length);
-        }
+        self.playerShots = SHOTS.upgradeShot();
+        console.log('number of shots after:' + self.playerShots.shotGroup.length);
     }
 
 
-    function firePlayerShots(game) {
-        if (game.time.now > privateAPI.nextFire && self.player.visible) {
-
-            var fireRate = 0;
-            // console.log('shooting with number of shots:' + self.playerShots.shotGroup.length);
-            for (var i = 0; i < self.playerShots.shotGroup.length; i++) {
-                var shotGroup = self.playerShots.shotGroup[i];
-                if(shotGroup.countDead() > 0){
-                    // console.log('and it exist bullets');
-                    fireRate = shotGroup.fireRate;
-                    var shot = shotGroup.getFirstDead();
-                    shot.reset(self.player.x + shotGroup.xPos, self.player.y + shotGroup.yPos);
-                    shot.body.velocity.x = shotGroup.shotSpeed;
-                    self.sound.play();
-                }
-            }
-
-            privateAPI.nextFire = game.time.now + fireRate;
-
-        }
+    function firePlayerShots() {
+        SHOTS.fire(self.player);
     }
 
 
@@ -217,10 +160,7 @@ var PLAYER = (function () {
             privateAPI.immortalTimeout = undefined;
         }, 2000);
 
-        if(privateAPI.activeShotDesc > 0){
-            privateAPI.activeShotDesc--;
-            self.playerShots = shotDesc[privateAPI.activeShotDesc];
-        }
+        self.playerShots = SHOTS.downgradeShots();
         privateAPI.blinkPlayer();
 
     }
@@ -255,54 +195,7 @@ var PLAYER = (function () {
         return !self.player.visible || privateAPI.immortal;
     }
 
-    function _createShotDescriptions(){
-        shotDesc = [
-            {
-                name: privateAPI.CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_NAME,
-                sound: privateAPI.CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_SOUND,
-                speed: 300,
-                xPos: [40],
-                yPos: [10],
-                shotGroup: undefined,
-                fireRate: 300,
-                numberOfShots: 1,
-                damage: 1
-            },
-            {
-                name: privateAPI.CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_UPGRADE_1_NAME,
-                sound: privateAPI.CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_SOUND,
-                speed: 500,
-                xPos: [40],
-                yPos: [10],
-                shotGroup: undefined,
-                fireRate: 200,
-                numberOfShots: 1,
-                damage: 2
-            },
-            {
-                name: privateAPI.CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_UPGRADE_2_NAME,
-                sound: privateAPI.CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_SOUND,
-                speed: 500,
-                xPos: [40, 40],
-                yPos: [25, 5],
-                shotGroup: undefined,
-                fireRate: 200,
-                numberOfShots: 2,
-                damage: 2
-            },
-            {
-                name: privateAPI.CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_UPGRADE_3_NAME,
-                sound: privateAPI.CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_3_SOUND,
-                speed: 500,
-                xPos: [40],
-                yPos: [3],
-                shotGroup: undefined,
-                fireRate: 200,
-                numberOfShots: 1,
-                damage: 6
-            }
-        ];
-    }
+
 
     return self;
 

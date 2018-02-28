@@ -153,7 +153,7 @@ ALL_ENEMIES = (function () {
         bonusLife: true,
         stay: true,
         timeToStay: 50000,
-        life: 8,
+        life: 15,
         extraScore: 2000,
         extraMovement: true,
         stayX: 550,
@@ -161,13 +161,13 @@ ALL_ENEMIES = (function () {
         moveDownY: 300
     };
 
-    // var privateAPI = {
-    //     enemyArray: [enemy1, enemy2, enemy3, enemy2, enemy4, boss1]
-    // };
-
     var privateAPI = {
-        enemyArray: [enemy1]
+        enemyArray: [enemy1, enemy2, enemy3, enemy2, enemy4, boss1]
     };
+
+    // var privateAPI = {
+    //     enemyArray: [enemy1]
+    // };
 
     var service = {
         getAllPictures: getAllPictures,
