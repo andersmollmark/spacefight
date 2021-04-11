@@ -1,7 +1,6 @@
 var PLAYER = (function () {
 
     var privateAPI = {
-        nextFire: 0,
         immortalTimeout: undefined,
         blinkTimeout: undefined,
         explodingTimeout: undefined,
@@ -41,7 +40,7 @@ var PLAYER = (function () {
         self.player.body.collideWorldBounds = true;
 
         SHOTS.init(game);
-        self.playerShots = SHOTS.getPlayerShots();
+            self.playerShots = SHOTS.getPlayerShots();
 
         // TODO fix more generic adding of animations
         self.player.animations.add('upLeft', [2], 10, true);

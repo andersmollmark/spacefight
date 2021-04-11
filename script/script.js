@@ -5,6 +5,8 @@ var background = {
     yMovement: 0
 };
 
+var chapters = [];
+
 var spacebar;
 var playerShot;
 var lives;
@@ -15,9 +17,6 @@ var extraLifeTimeout;
 
 var firingTimer = 0;
 var enemyExplode;
-var enemiesAlive;
-
-var activeEnemies;
 
 var numberOfKilledEnemyGroups = 0;
 var activeEnemyIndex = 0;
@@ -31,19 +30,17 @@ var scoreString;
 var enemyLifeString;
 
 var music;
-var enemyTemplate;
 
 var bonusSound;
 
 
 var extraLife;
 
-var newChapter = {
-    active: false,
-    group: undefined
-};
 
 function preload() {
+
+    chapters.push(new Chapter_1());
+    CHAPTER.preloadChapter(chapters[0], 'Destroy all enemies in space', game);
 
     game.load.spritesheet('ship', 'images/spaceship.png', 43, 39, 9);
     game.load.spritesheet('enemyExplosion', 'images/explosion1.png', 64, 64);
@@ -56,9 +53,6 @@ function preload() {
     game.load.image('lifeShip', 'images/lifeShip.png');
     game.load.image('healthIcon', 'images/healthIcon.png');
 
-    game.load.image('space', 'images/Space.png');
-    game.load.image('desert', 'images/desert1_big.png');
-
     game.load.image(CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_NAME, CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_PNG);
     game.load.image(CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_UPGRADE_1_NAME, CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_UPGRADE_1_PNG);
     game.load.image(CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_UPGRADE_2_NAME, CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_UPGRADE_2_PNG);
@@ -68,8 +62,6 @@ function preload() {
     game.load.audio(CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_3_SOUND, 'audio/photonBomb3.wav');
     game.load.audio('bonusSound', 'audio/weaponUpgrade2.wav');
     game.load.audio('missionImpossible', 'audio/Mission_Impossible.mp3');
-
-    game.load.image('chapter2', 'images/chapter2_mars.png');
 
     var allEnemyPics = ALL_ENEMIES.getAllPictures();
     for (var i = 0; i < allEnemyPics.length; i++) {
@@ -94,17 +86,12 @@ function create() {
     //  We're going to be using physics, so enable the Arcade Physics system
     game.physics.startSystem(Phaser.Physics.ARCADE);
 
-    background.image = game.add.tileSprite(0, 0, 800, 600, 'space');
-    background.xMovement = 2;
+    CHAPTER.prepareNewChapter(game);
 
     bonusSound = game.add.audio('bonusSound');
 
     PLAYER.init(game, CONSTANT_SERVICE);
     ENEMY_SERVICE.init(game);
-    enemyTemplate = ALL_ENEMIES.getEnemy(0);
-    enemiesAlive = enemyTemplate.numbersAlive;
-
-    activeEnemies = ENEMY_SERVICE.createEnemy(enemyTemplate);
 
     //  Our controls.
     cursors = game.input.keyboard.createCursorKeys();
@@ -139,6 +126,11 @@ function create() {
     scoreText = game.add.text(10, 10, scoreString + score, {font: '24px Arial', fill: '#fff'});
 
 
+    background.image = game.add.tileSprite(0, 0, 800, 600, CHAPTER.getChapterName());
+    background.xMovement = 2;
+
+    NEW_ENEMY_GROUP.setStart(true);
+
 }
 
 function createLiveShips(numberOfShips) {
@@ -157,18 +149,29 @@ function createLiveShips(numberOfShips) {
 
 function update() {
 
-    if (newChapter.active) {
-        game.physics.arcade.overlap(newChapter.group, PLAYER.player, startNewChapter, null, this);
+    // if (CHAPTER.isActive()) {
+    //     game.physics.arcade.overlap(CHAPTER.getGroup(), PLAYER.player, CHAPTER.create, null, this);
+    //     // background.image = game.add.tileSprite(0, 0, 800, 600, CHAPTER.getChapterName());
+    //     // background.image.tileScale.x = 1.7;
+    //     // background.xMovement = 0;
+    //     // background.yMovement = -0.5;
+    //
+    // }
+    if (false) {
+
     }
     else {
         background.image.tilePosition.x -= background.xMovement;
         background.image.tilePosition.y -= background.yMovement;
 
-        if (startNewEnemyGroup && game.time.now > startNewEnemyGroupTime) {
+        if (NEW_ENEMY_GROUP.isStart() && game.time.now > NEW_ENEMY_GROUP.getStartTime()) {
             enemyTemplate = ALL_ENEMIES.getEnemy(activeEnemyIndex);
             enemiesAlive = enemyTemplate.numbersAlive;
             activeEnemies = ENEMY_SERVICE.createEnemy(enemyTemplate);
-            startNewEnemyGroup = false;
+            // CHAPTER.dontStartNewEnemyGroups();
+            // startNewEnemyGroup = false;
+            NEW_ENEMY_GROUP.setStart(false);
+
 
             if (activeEnemies.life) {
 
@@ -401,9 +404,10 @@ function checkEnemiesAlive() {
 
     });
 
-    if (livingEnemies.length == 0) {
+    if (livingEnemies.length === 0) {
 
-        if (!startNewEnemyGroup) {
+        // if (!startNewEnemyGroup) {
+        if (NEW_ENEMY_GROUP.isStart()) {
             numberOfKilledEnemyGroups++;
             if (ALL_ENEMIES.getNumberOfEnemies <= numberOfKilledEnemyGroups) {
                 // console.log('number of enemies:' + ALL_ENEMIES.getNumberOfEnemies + ' killed enemies:' + numberOfKilledEnemyGroups);
@@ -411,11 +415,16 @@ function checkEnemiesAlive() {
                 // stateText.visible = true;
                 // startNewEnemyGroup = false;
 
-                prepareNewChapter(1); // TODO how to switch between chapters
+                NEW_ENEMY_GROUP.setStart(false);
+
+                // PLAYER.resetPlayerForNewChapter();
+                // CHAPTER.prepareNewChapter('chapter2', 'Land on mars and destroy enemy base'); // TODO how to switch between chapters
             }
             else {
-                startNewEnemyGroup = true;
-                startNewEnemyGroupTime = game.time.now + 3000;
+                NEW_ENEMY_GROUP.setStart(true);
+                NEW_ENEMY_GROUP.setStartTime(game.time.now + 3000);
+                // startNewEnemyGroup = true;
+                // startNewEnemyGroupTime = game.time.now + 3000;
                 activeEnemyIndex++;
             }
 
@@ -424,33 +433,33 @@ function checkEnemiesAlive() {
     }
 }
 
-function prepareNewChapter(chapterNo) {
-    newChapterText.text = "Land on mars and destroy enemy base";
-    newChapterText.visible = true;
-    startNewEnemyGroup = false;
+// function prepareNewChapter(chapterNo) {
+//     newChapterText.text = "Land on mars and destroy enemy base";
+//     newChapterText.visible = true;
+//     startNewEnemyGroup = false;
+//
+//     PLAYER.resetPlayerForNewChapter();
+//     newChapter.active = true;
+//     newChapter.group = game.add.group();
+//     newChapter.group.enableBody = true;
+//     newChapter.group.physicsBodyType = Phaser.Physics.ARCADE;
+//
+//     var chapter = newChapter.group.create(900, 10, 'chapter2');
+//     chapter.scale.x = 1;
+//     chapter.scale.y = 1;
+//     chapter.body.velocity.x = -100;
+//
+// }
 
-    PLAYER.resetPlayerForNewChapter();
-    newChapter.active = true;
-    newChapter.group = game.add.group();
-    newChapter.group.enableBody = true;
-    newChapter.group.physicsBodyType = Phaser.Physics.ARCADE;
-
-    var chapter = newChapter.group.create(900, 10, 'chapter2');
-    chapter.scale.x = 1;
-    chapter.scale.y = 1;
-    chapter.body.velocity.x = -100;
-
-}
-
-function startNewChapter() {
-    newChapter.active = false;
-    newChapterText.text = "";
-    newChapterText.visible = false;
-    startNewEnemyGroup = true;
-    background.image = game.add.tileSprite(0, 0, 800, 600, 'desert');
-    background.image.tileScale.x = 1.7;
-    background.xMovement = 0;
-    background.yMovement = -0.5;
-
-}
+// function startNewChapter() {
+//     newChapter.active = false;
+//     newChapterText.text = "";
+//     newChapterText.visible = false;
+//     startNewEnemyGroup = true;
+//     background.image = game.add.tileSprite(0, 0, 800, 600, 'desert');
+//     background.image.tileScale.x = 1.7;
+//     background.xMovement = 0;
+//     background.yMovement = -0.5;
+//
+// }
 
