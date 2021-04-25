@@ -20,22 +20,22 @@ function Enemy() {
         this.group.enableBody = true;
         this.group.physicsBodyType = Phaser.Physics.ARCADE;
 
-        this.numbersAlive = enemyTemplate.numbersAlive;
+        this.numbersAlive = chapterObj.enemyTemplate.numbersAlive;
         this.group.setAll('anchor.x', 0.5);
         this.group.setAll('anchor.y', 0.5);
-        this.group.setAll('scale.x', enemyTemplate.groupXScale);
-        this.group.setAll('scale.y', enemyTemplate.groupYScale);
+        this.group.setAll('scale.x', chapterObj.enemyTemplate.groupXScale);
+        this.group.setAll('scale.y', chapterObj.enemyTemplate.groupYScale);
         this.group.setAll('outOfBoundsKill', true);
         this.group.setAll('checkWorldBounds', true);
 
-        this.explode = game.add.audio(enemyTemplate.explodeName);
+        this.explode = game.add.audio(chapterObj.enemyTemplate.explodeName);
 
-        var startX = enemyTemplate.startXpos;
-        for (var i = 0; i < enemyTemplate.numbersAlive; i++) {
-            var tempEnemy = this.group.create(startX[i], enemyTemplate.startYpos + i * enemyTemplate.yDistance, enemyTemplate.pictureName);
-            tempEnemy.scale.x = enemyTemplate.xScale;
-            tempEnemy.scale.y = enemyTemplate.yScale;
-            tempEnemy.body.velocity.x = enemyTemplate.xSpeed;
+        var startX = chapterObj.enemyTemplate.startXpos;
+        for (var i = 0; i < chapterObj.enemyTemplate.numbersAlive; i++) {
+            var tempEnemy = this.group.create(startX[i], chapterObj.enemyTemplate.startYpos + i * chapterObj.enemyTemplate.yDistance, chapterObj.enemyTemplate.pictureName);
+            tempEnemy.scale.x = chapterObj.enemyTemplate.xScale;
+            tempEnemy.scale.y = chapterObj.enemyTemplate.yScale;
+            tempEnemy.body.velocity.x = chapterObj.enemyTemplate.xSpeed;
             tempEnemy.name = 'nisse' + i;
 
         }
@@ -43,23 +43,23 @@ function Enemy() {
         this.bullets = game.add.group();
         this.bullets.enableBody = true;
         this.bullets.physicsBodyType = Phaser.Physics.ARCADE;
-        this.bullets.createMultiple(enemyTemplate.numberOfBullets, enemyTemplate.bulletName);
+        this.bullets.createMultiple(chapterObj.enemyTemplate.numberOfBullets, chapterObj.enemyTemplate.bulletName);
         this.bullets.setAll('anchor.x', 0.5);
         this.bullets.setAll('anchor.y', 1);
         this.bullets.setAll('outOfBoundsKill', true);
         this.bullets.setAll('checkWorldBounds', true);
-        this.bulletSpeed = enemyTemplate.bulletSpeed;
-        this.firingSpeed = enemyTemplate.firingSpeed;
-        this.stay = enemyTemplate.stay;
-        this.timeToStay = enemyTemplate.timeToStay;
-        this.life = enemyTemplate.life;
-        this.damage = enemyTemplate.damage;
-        this.extraScore = enemyTemplate.extraScore;
+        this.bulletSpeed = chapterObj.enemyTemplate.bulletSpeed;
+        this.firingSpeed = chapterObj.enemyTemplate.firingSpeed;
+        this.stay = chapterObj.enemyTemplate.stay;
+        this.timeToStay = chapterObj.enemyTemplate.timeToStay;
+        this.life = chapterObj.enemyTemplate.life;
+        this.damage = chapterObj.enemyTemplate.damage;
+        this.extraScore = chapterObj.enemyTemplate.extraScore;
 
-        this.extraMovement = enemyTemplate.extraMovement;
-        this.stayX = enemyTemplate.stayX;
-        this.moveUpY = enemyTemplate.moveUpY;
-        this.moveDownY = enemyTemplate.moveDownY;
+        this.extraMovement = chapterObj.enemyTemplate.extraMovement;
+        this.stayX = chapterObj.enemyTemplate.stayX;
+        this.moveUpY = chapterObj.enemyTemplate.moveUpY;
+        this.moveDownY = chapterObj.enemyTemplate.moveDownY;
 
     }
 

@@ -194,6 +194,7 @@ ALL_ENEMIES = (function () {
         return privateAPI.enemyArray[index];
     }
 
+
     return service;
 
 }());
