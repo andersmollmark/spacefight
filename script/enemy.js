@@ -13,14 +13,14 @@ function Enemy() {
         init: init
     };
 
-    function init(template, game) {
-        this.me = template;
+    function init(chapterObj, game) {
+        this.me = chapterObj.enemyTemplate;
 
         this.group = game.add.group();
         this.group.enableBody = true;
         this.group.physicsBodyType = Phaser.Physics.ARCADE;
 
-        this.numbersAlive = chapterObj.enemyTemplate.numbersAlive;
+        this.numbersAlive = chapterObj.enemiesAlive;
         this.group.setAll('anchor.x', 0.5);
         this.group.setAll('anchor.y', 0.5);
         this.group.setAll('scale.x', chapterObj.enemyTemplate.groupXScale);
@@ -31,7 +31,7 @@ function Enemy() {
         this.explode = game.add.audio(chapterObj.enemyTemplate.explodeName);
 
         var startX = chapterObj.enemyTemplate.startXpos;
-        for (var i = 0; i < chapterObj.enemyTemplate.numbersAlive; i++) {
+        for (var i = 0; i < chapterObj.enemiesAlive; i++) {
             var tempEnemy = this.group.create(startX[i], chapterObj.enemyTemplate.startYpos + i * chapterObj.enemyTemplate.yDistance, chapterObj.enemyTemplate.pictureName);
             tempEnemy.scale.x = chapterObj.enemyTemplate.xScale;
             tempEnemy.scale.y = chapterObj.enemyTemplate.yScale;

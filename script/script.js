@@ -1,35 +1,15 @@
-var game = new Phaser.Game(800, 600, Phaser.AUTO, '', {preload: preload, create: create, update: update});
-// var background = {
-//     image: undefined,
-//     xMovement: 0,
-//     yMovement: 0
-// };
 
-var chapterObj = {
-  background : {
-    image: undefined,
-    xMovement: 0,
-    yMovement: 0
-  },
-  enemyTemplate: null,
-  enemiesAlive: null,
-  activeEnemies: null,
-  enemyLifeText: null,
-  enemyLifeString: '',
-  enemyHealth: null
-};
+var game = new Phaser.Game(800, 600, Phaser.AUTO, '', {preload: preload, create: create, update: update});
+
+var activeChapter;
 
 var spacebar;
 var playerShot;
 var lives;
-// var enemyHealth;
 var bonusTimeout;
 var extraLifeTimeout;
 var firingTimer = 0;
 var numberOfKilledEnemyGroups = 0;
-var activeEnemyIndex = 0;
-var startNewEnemyGroup = false;
-var startNewEnemyGroupTime = 0;
 var stateText;
 var newChapterText;
 var score = 0;
@@ -96,7 +76,7 @@ function create() {
     ENEMY_SERVICE.init(game);
     bonusSound = game.add.audio('bonusSound');
 
-    CHAPTER_SPACE.create(chapterObj);
+    activeChapter = new Space(game);
 
     //  Our controls.
     cursors = game.input.keyboard.createCursorKeys();
@@ -147,43 +127,27 @@ function update() {
         game.physics.arcade.overlap(newChapter.group, PLAYER.player, startNewChapter, null, this);
     }
     else {
-        chapterObj.background.image.tilePosition.x -= chapterObj.background.xMovement;
-      chapterObj.background.image.tilePosition.y -= chapterObj.background.yMovement;
 
-        if (startNewEnemyGroup && game.time.now > startNewEnemyGroupTime) {
-            chapterObj.enemyTemplate = ALL_ENEMIES.getEnemy(activeEnemyIndex);
-            chapterObj.enemiesAlive = chapterObj.enemyTemplate.numbersAlive;
-            chapterObj.activeEnemies = ENEMY_SERVICE.createEnemy(chapterObj.enemyTemplate);
-            startNewEnemyGroup = false;
-
-            if (chapterObj.activeEnemies.life) {
-
-              chapterObj.enemyHealth = game.add.group();
-                for (var i = 0; i < chapterObj.activeEnemies.life; i++) {
-                    var health = chapterObj.enemyHealth.create(game.world.width - 450 + (5 * i), 520, 'healthIcon');
-                    health.anchor.setTo(0.5, 0.5);
-                    health.scale.x = 0.7;
-                    health.scale.y = 0.7;
-                }
-
-            }
-
-        }
+      //   activeChapter.backgroundImage.tilePosition.x -= activeChapter.backgroundXmovement;
+      // activeChapter.backgroundImage.tilePosition.y -= activeChapter.backgroundYmovement;
+      //
+      //   if (activeChapter.startNewEnemyGroup && game.time.now > activeChapter.startNewEnemyGroupTime) {
+      //       activeChapter.doStartNewEnemyGroup();
+      //   }
+        activeChapter.updateChapter();
 
         PLAYER.move(cursors);
-
         if (spacebar.isDown) {
             PLAYER.firePlayerShots();
         }
-
         if (game.time.now > firingTimer) {
             enemyFires();
         }
 
         //  Check collisions and bullets and finally if bonusblob
-        game.physics.arcade.overlap(PLAYER.playerShots.shotGroup, chapterObj.activeEnemies.group, shotHitsEnemy, null, this);
-        game.physics.arcade.overlap(chapterObj.activeEnemies.bullets, PLAYER.player, enemyShotHitsPlayer, null, this);
-        game.physics.arcade.overlap(chapterObj.activeEnemies.group, PLAYER.player, enemyCollideWithPlayer, null, this);
+        game.physics.arcade.overlap(PLAYER.playerShots.shotGroup, activeChapter.activeEnemies.group, shotHitsEnemy, null, this);
+        game.physics.arcade.overlap(activeChapter.activeEnemies.bullets, PLAYER.player, enemyShotHitsPlayer, null, this);
+        game.physics.arcade.overlap(activeChapter.activeEnemies.group, PLAYER.player, enemyCollideWithPlayer, null, this);
 
         if (bonusTimeout) {
             game.physics.arcade.overlap(BONUS.get(), PLAYER.player, playerTakesBonus, null, this);
@@ -205,7 +169,7 @@ function shotHitsEnemy(shot, enemy) {
 
 function killEnemy(enemy, damage, shotPos) {
 
-    var killResult = ENEMY_SERVICE.killEnemy(enemy, damage, shotPos, chapterObj.enemyHealth);
+    var killResult = ENEMY_SERVICE.killEnemy(enemy, damage, shotPos, activeChapter.enemyHealth);
 
     scoreText.text = scoreString + killResult.score;
     // console.log('enemy.x:' + enemy.x + ' enemy.y:' + enemy.y + ' shot.x:' + (pos.x + 35) + ' shot.y:' + pos.y);
@@ -214,41 +178,41 @@ function killEnemy(enemy, damage, shotPos) {
     explode.anchor.y = 0.5;
     explode.animations.add('kaboom');
     explode.play('kaboom', 35, false, true);
-    chapterObj.activeEnemies.explode.play();
+    activeChapter.activeEnemies.explode.play();
 
     if (killResult.killed) {
-        removeEnemy(enemy);
+        activeChapter.removeEnemy(enemy);
     }
 }
 
-function removeEnemy(enemy) {
-    chapterObj.enemiesAlive--;
-    if (chapterObj.enemiesAlive === 0 && chapterObj.enemyTemplate.bonus) {
-        addBonusBlob(enemy);
-    }
-    else if (chapterObj.enemiesAlive === 0 && chapterObj.enemyTemplate.bonusLife) {
-        addExtraLife(enemy);
-    }
-}
-
-function addBonusBlob(enemy) {
-    BONUS.create(enemy, game);
-    bonusTimeout = window.setTimeout(function () {
-        BONUS.remove();
-        bonusTimeout = undefined;
-
-    }, 8000);
-
-}
-
-function addExtraLife(enemy) {
-    EXTRA_LIFE.create(enemy, game);
-    extraLifeTimeout = window.setTimeout(function () {
-        EXTRA_LIFE.remove();
-        extraLifeTimeout = undefined;
-    }, 8000);
-
-}
+// function removeEnemy(enemy) {
+//     activeChapter.enemiesAlive--;
+//     if (activeChapter.enemiesAlive === 0 && activeChapter.enemyTemplate.bonus) {
+//         addBonusBlob(enemy);
+//     }
+//     else if (activeChapter.enemiesAlive === 0 && activeChapter.enemyTemplate.bonusLife) {
+//         addExtraLife(enemy);
+//     }
+// }
+//
+// function addBonusBlob(enemy) {
+//     BONUS.create(enemy, game);
+//     bonusTimeout = window.setTimeout(function () {
+//         BONUS.remove();
+//         bonusTimeout = undefined;
+//
+//     }, 8000);
+//
+// }
+//
+// function addExtraLife(enemy) {
+//     EXTRA_LIFE.create(enemy, game);
+//     extraLifeTimeout = window.setTimeout(function () {
+//         EXTRA_LIFE.remove();
+//         extraLifeTimeout = undefined;
+//     }, 8000);
+//
+// }
 
 function enemyShotHitsPlayer(player, bullet) {
     bullet.kill();
@@ -273,12 +237,12 @@ function killPlayer(player) {
     explode.animations.add('kaboom');
     explode.play('kaboom', 35, false, true);
     PLAYER.setVisible(false);
-    chapterObj.activeEnemies.explode.play();
+    activeChapter.activeEnemies.explode.play();
 
     // When the player dies
     if (lives.countLiving() < 0) {
         player.kill();
-        chapterObj.activeEnemies.bullets.callAll('kill');
+        activeChapter.activeEnemies.bullets.callAll('kill');
 
         stateText.text = "GAME OVER";
         stateText.visible = true;
@@ -324,25 +288,25 @@ function playerGetsExtraLife(bonus, player) {
 function enemyFires() {
 
     //  Grab the first bullet we can from the pool
-    enemyBullet = chapterObj.activeEnemies.bullets.getFirstExists(false);
+    enemyBullet = activeChapter.activeEnemies.bullets.getFirstExists(false);
 
     var livingEnemies = [];
 
-    chapterObj.activeEnemies.group.forEachAlive(function (enemy) {
+    activeChapter.activeEnemies.group.forEachAlive(function (enemy) {
         livingEnemies.push(enemy);
 
-        if (chapterObj.activeEnemies.stay) {
+        if (activeChapter.activeEnemies.stay) {
             if (enemy.body.velocity.x !== 0 && !enemy.hasStopped) {
-                if (chapterObj.activeEnemies.stayX && enemy.body.x <= chapterObj.activeEnemies.stayX) {
+                if (activeChapter.activeEnemies.stayX && enemy.body.x <= activeChapter.activeEnemies.stayX) {
                     enemy.body.oldvelocity = enemy.body.velocity.x;
                     enemy.body.velocity.x = 0;
-                    enemy.timeToMove = game.time.now + chapterObj.activeEnemies.timeToStay;
+                    enemy.timeToMove = game.time.now + activeChapter.activeEnemies.timeToStay;
                     enemy.hasStopped = true;
                 }
-                else if (!chapterObj.activeEnemies.stayX && enemy.body.x <= game.world.width / 2) {
+                else if (!activeChapter.activeEnemies.stayX && enemy.body.x <= game.world.width / 2) {
                     enemy.body.oldvelocity = enemy.body.velocity.x;
                     enemy.body.velocity.x = 0;
-                    enemy.timeToMove = game.time.now + chapterObj.activeEnemies.timeToStay;
+                    enemy.timeToMove = game.time.now + activeChapter.activeEnemies.timeToStay;
                     enemy.hasStopped = true;
                 }
 
@@ -366,8 +330,8 @@ function enemyFires() {
         // And fire the bullet from this enemy
         enemyBullet.reset(shooter.body.x, shooter.body.y);
 
-        game.physics.arcade.moveToObject(enemyBullet, PLAYER.player, chapterObj.activeEnemies.bulletSpeed);
-        firingTimer = game.time.now + chapterObj.activeEnemies.firingSpeed;
+        game.physics.arcade.moveToObject(enemyBullet, PLAYER.player, activeChapter.activeEnemies.bulletSpeed);
+        firingTimer = game.time.now + activeChapter.activeEnemies.firingSpeed;
     }
 
 
@@ -377,7 +341,7 @@ function checkEnemiesAlive() {
     var livingEnemies = [];
 
 
-    chapterObj.activeEnemies.group.forEachAlive(function (enemy) {
+    activeChapter.activeEnemies.group.forEachAlive(function (enemy) {
         if (enemy.x < -100) {
             enemy.kill();
         }
@@ -389,7 +353,7 @@ function checkEnemiesAlive() {
 
     if (livingEnemies.length == 0) {
 
-        if (!startNewEnemyGroup) {
+        if (!activeChapter.startNewEnemyGroup) {
             numberOfKilledEnemyGroups++;
             if (ALL_ENEMIES.getNumberOfEnemies <= numberOfKilledEnemyGroups) {
                 // console.log('number of enemies:' + ALL_ENEMIES.getNumberOfEnemies + ' killed enemies:' + numberOfKilledEnemyGroups);
@@ -400,9 +364,9 @@ function checkEnemiesAlive() {
                 prepareNewChapter(1); // TODO how to switch between chapters
             }
             else {
-                startNewEnemyGroup = true;
-                startNewEnemyGroupTime = game.time.now + 3000;
-                activeEnemyIndex++;
+              activeChapter.startNewEnemyGroup = true;
+              activeChapter.startNewEnemyGroupTime = game.time.now + 3000;
+                activeChapter.activeEnemyIndex++;
             }
 
         }
@@ -413,7 +377,7 @@ function checkEnemiesAlive() {
 function prepareNewChapter(chapterNo) {
     newChapterText.text = "Land on mars and destroy enemy base";
     newChapterText.visible = true;
-    startNewEnemyGroup = false;
+  activeChapter.startNewEnemyGroup = false;
 
     PLAYER.resetPlayerForNewChapter();
     newChapter.active = true;
@@ -432,11 +396,11 @@ function startNewChapter() {
     newChapter.active = false;
     newChapterText.text = "";
     newChapterText.visible = false;
-    startNewEnemyGroup = true;
-    background.image = game.add.tileSprite(0, 0, 800, 600, 'desert');
-    background.image.tileScale.x = 1.7;
-    background.xMovement = 0;
-    background.yMovement = -0.5;
+  activeChapter.startNewEnemyGroup = true;
+    activeChapter.backgroundImage = game.add.tileSprite(0, 0, 800, 600, 'desert');
+    activeChapter.backgroundImage.tileScale.x = 1.7;
+    activeChapter.backgroundXmovement = 0;
+    activeChapter.backgroundYmovement = -0.5;
 
 }
 

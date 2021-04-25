@@ -9,15 +9,34 @@ var ENEMY_SERVICE = (function () {
         init: init,
         createEnemy: createEnemy,
         killEnemy: killEnemy
+        // startNewEnemyGroup: startNewEnemyGroup
     };
 
     function init(game) {
         privateAPI.game = game;
     }
 
-    function createEnemy(enemyTemplate) {
+    // function startNewEnemyGroup(chapterObj) {
+    //   chapterObj.enemyTemplate = ALL_ENEMIES.getEnemy(activeEnemyIndex);
+    //   chapterObj.enemiesAlive = chapterObj.enemyTemplate.numbersAlive;
+    //   chapterObj.activeEnemies = createEnemy(chapterObj);
+    //   chapterObj.startNewEnemyGroup = false;
+    //
+    //   if (chapterObj.activeEnemies.life) {
+    //     chapterObj.enemyHealth = privateAPI.game.add.group();
+    //     for (var i = 0; i < chapterObj.activeEnemies.life; i++) {
+    //       var health = chapterObj.enemyHealth.create(privateAPI.game.world.width - 450 + (5 * i), 520, 'healthIcon');
+    //       health.anchor.setTo(0.5, 0.5);
+    //       health.scale.x = 0.7;
+    //       health.scale.y = 0.7;
+    //     }
+    //
+    //   }
+    // }
+
+    function createEnemy(chapterObj) {
         activeEnemies = new Enemy();
-        activeEnemies.init(enemyTemplate, privateAPI.game);
+        activeEnemies.init(chapterObj, privateAPI.game);
         return activeEnemies;
     }
 
