@@ -73,7 +73,6 @@ function create() {
 
     //  We're going to be using physics, so enable the Arcade Physics system
     game.physics.startSystem(Phaser.Physics.ARCADE);
-    ENEMY_SERVICE.init(game);
     bonusSound = game.add.audio('bonusSound');
 
     activeChapter = new Space(game);
@@ -128,12 +127,6 @@ function update() {
     }
     else {
 
-      //   activeChapter.backgroundImage.tilePosition.x -= activeChapter.backgroundXmovement;
-      // activeChapter.backgroundImage.tilePosition.y -= activeChapter.backgroundYmovement;
-      //
-      //   if (activeChapter.startNewEnemyGroup && game.time.now > activeChapter.startNewEnemyGroupTime) {
-      //       activeChapter.doStartNewEnemyGroup();
-      //   }
         activeChapter.updateChapter();
 
         PLAYER.move(cursors);
@@ -161,58 +154,9 @@ function update() {
 }
 
 function shotHitsEnemy(shot, enemy) {
-
-    shot.kill();
-    // console.log('shooting with damage:' + PLAYER.playerShots.shotGroup.damage);
-    killEnemy(enemy, PLAYER.playerShots.shotGroup.damage, shot);
+  let killResult = activeChapter.shotHitsEnemy(shot, enemy);
+  scoreText.text = scoreString + killResult.score;
 }
-
-function killEnemy(enemy, damage, shotPos) {
-
-    var killResult = ENEMY_SERVICE.killEnemy(enemy, damage, shotPos, activeChapter.enemyHealth);
-
-    scoreText.text = scoreString + killResult.score;
-    // console.log('enemy.x:' + enemy.x + ' enemy.y:' + enemy.y + ' shot.x:' + (pos.x + 35) + ' shot.y:' + pos.y);
-    var explode = game.add.sprite(shotPos.x + 20, shotPos.y, 'enemyExplosion');
-    explode.anchor.x = 0;
-    explode.anchor.y = 0.5;
-    explode.animations.add('kaboom');
-    explode.play('kaboom', 35, false, true);
-    activeChapter.activeEnemies.explode.play();
-
-    if (killResult.killed) {
-        activeChapter.removeEnemy(enemy);
-    }
-}
-
-// function removeEnemy(enemy) {
-//     activeChapter.enemiesAlive--;
-//     if (activeChapter.enemiesAlive === 0 && activeChapter.enemyTemplate.bonus) {
-//         addBonusBlob(enemy);
-//     }
-//     else if (activeChapter.enemiesAlive === 0 && activeChapter.enemyTemplate.bonusLife) {
-//         addExtraLife(enemy);
-//     }
-// }
-//
-// function addBonusBlob(enemy) {
-//     BONUS.create(enemy, game);
-//     bonusTimeout = window.setTimeout(function () {
-//         BONUS.remove();
-//         bonusTimeout = undefined;
-//
-//     }, 8000);
-//
-// }
-//
-// function addExtraLife(enemy) {
-//     EXTRA_LIFE.create(enemy, game);
-//     extraLifeTimeout = window.setTimeout(function () {
-//         EXTRA_LIFE.remove();
-//         extraLifeTimeout = undefined;
-//     }, 8000);
-//
-// }
 
 function enemyShotHitsPlayer(player, bullet) {
     bullet.kill();
@@ -258,7 +202,7 @@ function enemyCollideWithPlayer(player, enemy) {
         return;
     }
     killPlayer(player);
-    killEnemy(enemy, 1, player);
+    this.activeChapter.killEnemy(enemy, 1, player);
 }
 
 function playerTakesBonus(bonus, player) {
@@ -366,7 +310,8 @@ function checkEnemiesAlive() {
             else {
               activeChapter.startNewEnemyGroup = true;
               activeChapter.startNewEnemyGroupTime = game.time.now + 3000;
-                activeChapter.activeEnemyIndex++;
+              activeChapter.setActiveEnemyIndex(activeChapter.activeEnemyIndex + 1);
+                // activeChapter.activeEnemyIndex++;
             }
 
         }
