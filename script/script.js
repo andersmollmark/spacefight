@@ -119,15 +119,14 @@ function createLiveShips(numberOfShips) {
     }
 }
 
-
 function update() {
 
     if (newChapter.active) {
         game.physics.arcade.overlap(newChapter.group, PLAYER.player, startNewChapter, null, this);
     }
-    else {
+    else if(activeChapter.chapterStarted){
 
-        activeChapter.updateChapter();
+      activeChapter.updateChapter();
 
         PLAYER.move(cursors);
         if (spacebar.isDown) {
@@ -184,7 +183,7 @@ function killPlayer(player) {
     activeChapter.activeEnemies.explode.play();
 
     // When the player dies
-    if (lives.countLiving() < 0) {
+    if (lives.countLiving() <= 0) {
         player.kill();
         activeChapter.activeEnemies.bullets.callAll('kill');
 
@@ -202,7 +201,7 @@ function enemyCollideWithPlayer(player, enemy) {
         return;
     }
     killPlayer(player);
-    this.activeChapter.killEnemy(enemy, 1, player);
+    activeChapter.killEnemy(enemy, 1, player);
 }
 
 function playerTakesBonus(bonus, player) {
@@ -283,8 +282,6 @@ function enemyFires() {
 
 function checkEnemiesAlive() {
     var livingEnemies = [];
-
-
     activeChapter.activeEnemies.group.forEachAlive(function (enemy) {
         if (enemy.x < -100) {
             enemy.kill();
@@ -311,7 +308,6 @@ function checkEnemiesAlive() {
               activeChapter.startNewEnemyGroup = true;
               activeChapter.startNewEnemyGroupTime = game.time.now + 3000;
               activeChapter.setActiveEnemyIndex(activeChapter.activeEnemyIndex + 1);
-                // activeChapter.activeEnemyIndex++;
             }
 
         }

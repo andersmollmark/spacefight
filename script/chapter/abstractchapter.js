@@ -2,33 +2,31 @@ class AbstractChapter {
 
   constructor(game, tileSprite, lifeText, activeEnemyIndex) {
     this.game = game;
-    // this.activeEnemyIndex = activeEnemyIndex;
-    // this.setChapterSpecifics(tileSprite, lifeText);
-    // this.setEnemies();
+    this.activeEnemyIndex = activeEnemyIndex;
+    this.setChapterSpecifics(tileSprite, lifeText);
+    this.startNewEnemyGroup = true;
+    this.startNewEnemyGroupTime = this.game.time.now + 3000;
+    this.chapterStarted = false;
+    this.doUpdateChapter();
   }
 
   setChapterSpecifics(tileSprite, lifeText){
-    this.backgroundImage = game.add
+    this.backgroundImage = this.game.add
         .tileSprite(tileSprite.x,
           tileSprite.y,
           tileSprite.width,
           tileSprite.height,
           tileSprite.textKey);
 
-    this.enemyLifeText = game.add
+    this.enemyLifeText = this.game.add
       .text(lifeText.x,
         lifeText.y,
         lifeText.text,
         lifeText.font);
     this.enemyLifeText.anchor.setTo(0.5, 0.5);
     this.enemyLifeText.visible = false;
-
-  }
-
-  setEnemies() {
-    this.enemyTemplate = ALL_ENEMIES.getEnemy(this.activeEnemyIndex);
-    this.enemiesAlive = this.enemyTemplate.numbersAlive;
-    this.activeEnemies = this.createEnemy();
+    this.backgroundXmovement = tileSprite.backgroundXmovement;
+    this.backgroundYmovement = tileSprite.backgroundYmovement
 
   }
 
@@ -37,7 +35,6 @@ class AbstractChapter {
   }
 
   doStartNewEnemyGroup() {
-    this.startNewEnemyGroup = false;
     this.enemyTemplate = ALL_ENEMIES.getEnemy(this.activeEnemyIndex);
     this.enemiesAlive = this.enemyTemplate.numbersAlive;
     this.activeEnemies = this.createEnemy();
@@ -55,12 +52,18 @@ class AbstractChapter {
   }
 
   updateChapter() {
-    this.backgroundImage.tilePosition.x -= this.backgroundXmovement;
+      this.backgroundImage.tilePosition.x -= this.backgroundXmovement;
     this.backgroundImage.tilePosition.y -= this.backgroundYmovement;
 
-    if (this.startNewEnemyGroup && game.time.now > this.startNewEnemyGroupTime) {
-      this.doStartNewEnemyGroup();
+    if (this.startNewEnemyGroup && this.game.time.now > this.startNewEnemyGroupTime) {
+      this.doUpdateChapter();
     }
+  }
+
+  doUpdateChapter() {
+    this.startNewEnemyGroup = false;
+    this.doStartNewEnemyGroup();
+    this.chapterStarted = true;
   }
 
   removeEnemy(enemy) {
@@ -74,7 +77,7 @@ class AbstractChapter {
   }
 
   addBonusBlob(enemy) {
-    BONUS.create(enemy, game);
+    BONUS.create(enemy, this.game);
     bonusTimeout = window.setTimeout(function () {
       BONUS.remove();
       bonusTimeout = undefined;
@@ -84,7 +87,7 @@ class AbstractChapter {
   }
 
   addExtraLife(enemy) {
-    EXTRA_LIFE.create(enemy, game);
+    EXTRA_LIFE.create(enemy, this.game);
     extraLifeTimeout = window.setTimeout(function () {
       EXTRA_LIFE.remove();
       extraLifeTimeout = undefined;
