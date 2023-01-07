@@ -18,14 +18,18 @@ class Enemygroup {
 
     this.explode = game.add.audio(enemytemplate.explodeName);
 
-    var startX = enemytemplate.startXpos;
     for (var i = 0; i < this.numbersAlive; i++) {
-      var tempEnemy = this.group.create(startX[i], enemytemplate.startYpos + i * enemytemplate.yDistance, enemytemplate.pictureName);
+      var tempEnemy = this.group.create(
+        enemytemplate.startXpos[i],
+        enemytemplate.startYpos[i],
+        enemytemplate.pictureName
+      );
       tempEnemy.scale.x = enemytemplate.xScale;
       tempEnemy.scale.y = enemytemplate.yScale;
       tempEnemy.body.velocity.x = enemytemplate.xSpeed;
+      tempEnemy.body.velocity.y = enemytemplate.ySpeed;
       tempEnemy.name = 'nisse' + i;
-
+      console.log('enemy:' + tempEnemy);
     }
 
     this.bullets = game.add.group();
@@ -51,13 +55,14 @@ class Enemygroup {
   }
 
   killEnemy(enemy, damage, shotPos, enemyHealth) {
-    var killResult = this.killEnemyInGroup(enemy, damage, shotPos, enemyHealth);
-    var explode = this.game.add.sprite(shotPos.x + 20, shotPos.y, 'enemyExplosion');
-    explode.anchor.x = 0;
+    let killResult = this.killEnemyInGroup(enemy, damage, shotPos, enemyHealth);
+    // var explode = this.game.add.sprite(enemy.position.x, enemy.position.y, 'enemyExplosion');
+    let explode = this.game.add.sprite(enemy.position.x, shotPos.position.y, 'enemyExplosion');
+    explode.anchor.x = 0.5;
     explode.anchor.y = 0.5;
     explode.animations.add('kaboom');
     explode.play('kaboom', 35, false, true);
-    this.explode.play();
+    // this.explode.play();
     return killResult;
   }
 
