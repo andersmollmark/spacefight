@@ -1,4 +1,4 @@
-  class Abstractplayer {
+  class AbstractSpaceship {
 
   animations = [
     { direction: 'upLeft', index: 2 },

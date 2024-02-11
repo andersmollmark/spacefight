@@ -13,6 +13,18 @@ class Laserupwards extends Abstractshot {
         numberOfShots: 1,
         damage: 1
       },
+      {
+        name: CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_UP_NAME,
+        sound: CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_SOUND,
+        speed: -300,
+        xPos: [2, 17],
+        yPos: [-10, -10],
+        shotGroup: undefined,
+        fireRate: 200,
+        numberOfShots: 2,
+        damage: 2
+      },
+
     ];
 
   constructor(game) {

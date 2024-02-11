@@ -1,4 +1,4 @@
-SPACE_ENEMIES = (function () {
+SPACE_TEMPLATES = (function () {
 
   var enemy1 = {
     numbersAlive: 5,
@@ -110,7 +110,7 @@ SPACE_ENEMIES = (function () {
     bonusLife: true,
     stay: true,
     timeToStay: 50000,
-    life: 15,
+    life: 1,
     extraScore: 2000,
     extraMovement: true,
     stayX: 550,
@@ -122,13 +122,14 @@ SPACE_ENEMIES = (function () {
   };
 
   var privateAPI = {
-    enemyArray: [enemy1, enemy2, enemy3, enemy2, enemy4, boss1  ]
-    // enemyArray: [boss1]
+    // enemyArray: [enemy1, enemy2, enemy3, enemy2, enemy4, boss1  ]
+    enemyArray: [boss1]
   };
 
   var service = {
     getNumberOfEnemies: getNumberOfEnemies,
-    getEnemy: getEnemy
+    getEnemy: getEnemy,
+    getBackground: getSpaceBackground
   };
 
   function getEnemy(index) {
@@ -138,6 +139,10 @@ SPACE_ENEMIES = (function () {
 
   function getNumberOfEnemies() {
     return privateAPI.enemyArray.length;
+  }
+
+  function getSpaceBackground() {
+    return  'images/space/spaceBackground.png';
   }
 
   return service;

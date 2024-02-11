@@ -27,15 +27,15 @@ function preload() {
     game.load.spritesheet('enemyExplosion', 'images/explosion1.png', 64, 64);
     game.load.spritesheet('bonusSprite', 'images/bonusBlob.png', 64, 64);
 
-    game.load.spritesheet('hero', 'images/hero2.png', 30, 40);
+    game.load.spritesheet('heroUpwards', 'images/hero4.png', 32, 48);
 
     game.load.spritesheet('bonusLife', 'images/bonusLifeBig.jpg', 29.5, 29.5);
 
     game.load.image('lifeShip', 'images/lifeShip.png');
     game.load.image('healthIcon', 'images/healthIcon.png');
 
-    game.load.image('space', 'images/Space.png');
-    game.load.image('desert', 'images/desertTest5.jpg');
+    game.load.image('space', SPACE_TEMPLATES.getBackground());
+    game.load.image('desert', MARS_TEMPLATES.getBackground());
 
     game.load.image(CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_NAME, CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_PNG);
     game.load.image(CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_UP_NAME, CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_UP_PNG);
@@ -193,14 +193,6 @@ function enemyFires() {
 
     activeChapter.activeEnemies.group.forEachAlive(function (enemy) {
         livingEnemies.push(enemy);
-
-      if(activeChapter.backgroundImage.key !== 'space') {
-        console.log('stay:' + activeChapter.activeEnemies.stay +
-          ' enemy.body.velocity.y:' + enemy.body.velocity.y +
-          ' enemy.body.y:' + enemy.body.y +
-          ' activeChapter.activeEnemies.stayY:' + activeChapter.activeEnemies.stayY +
-        ' enemy.hasStopped:' + enemy.hasStopped);
-      }
 
       if(this.shouldEnemyStayX(enemy)) {
         this.stopEnemy(enemy, enemy.body.velocity.x);

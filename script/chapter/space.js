@@ -20,7 +20,7 @@ class Space extends AbstractChapter{
 
 
   constructor(game) {
-    super(game, Space.tileSprite, Space.lifeText, SPACE_ENEMIES, 0);
+    super(game, Space.tileSprite, Space.lifeText, SPACE_TEMPLATES, 0);
     this.enemyLifeText = game.add.text(500, 10, ' ', {font: '24px Arial', fill: '#fff'});
     this.enemyLifeText.anchor.setTo(0.5, 0.5);
     this.enemyLifeText.visible = false;

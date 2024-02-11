@@ -1,4 +1,4 @@
-MARS_ENEMIES = (function () {
+MARS_TEMPLATES = (function () {
 
   var enemy1 = {
     numbersAlive: 5,
@@ -125,7 +125,8 @@ MARS_ENEMIES = (function () {
 
   var service = {
     getNumberOfEnemies: getNumberOfEnemies,
-    getEnemy: getEnemy
+    getEnemy: getEnemy,
+    getBackground: getBackground
   };
 
   function getEnemy(index) {
@@ -135,6 +136,10 @@ MARS_ENEMIES = (function () {
 
   function getNumberOfEnemies() {
     return privateAPI.enemyArray.length;
+  }
+
+  function getBackground() {
+    return 'images/desertBackground1.jpg';
   }
 
   return service;

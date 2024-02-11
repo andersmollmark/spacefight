@@ -1,4 +1,4 @@
-class Spaceshipupwards extends Abstractplayer {
+class Spaceshipupwards extends AbstractSpaceship {
   constructor(game) {
     super(true, game, 'shipUpwards');
     this.playerShots = new Laserupwards(game);
