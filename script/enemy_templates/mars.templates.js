@@ -77,16 +77,50 @@ MARS_ENEMIES = (function () {
     bulletPath: ALL_ENEMIES.getAllBullets()[0].path,
     bulletSpeed: 220,
     firingSpeed: 1000,
-    xScale: 0.15,
-    yScale: 0.15,
-    groupXScale: 0.2,
-    groupYScale: 0.2,
+    xScale: 0.35,
+    yScale: 0.35,
+    groupXScale: 0.3,
+    groupYScale: 0.3,
     bonus: false,
     stay: false
   };
 
+  var bossMars = {
+    numbersAlive: 1,
+    explodeName: ALL_ENEMIES.getAllSounds()[0].name,
+    startXpos: [150],
+    startYpos: [-100],
+    pictureName: ALL_ENEMIES.getAllPictures()[9].name,
+    picturePath: ALL_ENEMIES.getAllPictures()[9].path,
+    xSpeed: 0,
+    ySpeed: 50,
+    numberOfBullets: 5,
+    bulletName: ALL_ENEMIES.getAllBullets()[0].name,
+    bulletPath: ALL_ENEMIES.getAllBullets()[0].path,
+    bulletSpeed: 300,
+    firingSpeed: 500,
+    xScale: 0.5,
+    yScale: 0.5,
+    groupXScale: 0.5,
+    groupYScale: 0.5,
+    bonus: false,
+    bonusLife: true,
+    stay: true,
+    timeToStay: 50000,
+    life: 15,
+    extraScore: 2000,
+    extraMovement: true,
+    stayY: 100,
+    moveUpY: -100,
+    moveDownY: 100,
+    isBoss: true,
+    shotX: 200,
+    shotY: 100
+  };
+
   var privateAPI = {
-    enemyArray: [enemy1, enemy2, enemy3, enemy4]
+    enemyArray: [enemy1, enemy2, enemy3, enemy4, bossMars]
+    // enemyArray: [bossMars]
   };
 
   var service = {

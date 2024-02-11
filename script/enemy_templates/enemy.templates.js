@@ -37,6 +37,10 @@ ALL_ENEMIES = (function () {
       name: 'enemy4Mars',
       path: 'images/enemyTrans8.png'
     },
+    {
+      name: 'bossMars',
+      path: 'images/bossMars2.png'
+    },
 
 
   ];

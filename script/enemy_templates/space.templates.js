@@ -92,12 +92,12 @@ SPACE_ENEMIES = (function () {
     numbersAlive: 1,
     explodeName: ALL_ENEMIES.getAllSounds()[0].name,
     startXpos: [1430],
-    startYpos: 200,
+    startYpos: [200],
     pictureName: ALL_ENEMIES.getAllPictures()[4].name,
     picturePath: ALL_ENEMIES.getAllPictures()[4].path,
     xSpeed: -200,
     ySpeed: 0,
-    numberOfBullets: 30,
+    numberOfBullets: 0,
     bulletName: ALL_ENEMIES.getAllBullets()[0].name,
     bulletPath: ALL_ENEMIES.getAllBullets()[0].path,
     bulletSpeed: 300,
@@ -115,12 +115,15 @@ SPACE_ENEMIES = (function () {
     extraMovement: true,
     stayX: 550,
     moveUpY: 100,
-    moveDownY: 300
+    moveDownY: 300,
+    isBoss: true,
+    shotX: 0,
+    shotY: 100
   };
 
   var privateAPI = {
-    // enemyArray: [enemy1, enemy2, enemy3, enemy2, enemy4, boss1  ]
-    enemyArray: [boss1]
+    enemyArray: [enemy1, enemy2, enemy3, enemy2, enemy4, boss1  ]
+    // enemyArray: [boss1]
   };
 
   var service = {

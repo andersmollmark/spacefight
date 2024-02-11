@@ -50,19 +50,23 @@ class Enemygroup {
 
     this.extraMovement = enemytemplate.extraMovement;
     this.stayX = enemytemplate.stayX;
+    this.stayY = enemytemplate.stayY;
     this.moveUpY = enemytemplate.moveUpY;
     this.moveDownY = enemytemplate.moveDownY;
+    this.isBoss = enemytemplate.isBoss;
+    this.shotX = enemytemplate.shotX;
+    this.shotY = enemytemplate.shotY;
   }
 
   killEnemy(enemy, damage, shotPos, enemyHealth) {
     let killResult = this.killEnemyInGroup(enemy, damage, shotPos, enemyHealth);
     // var explode = this.game.add.sprite(enemy.position.x, enemy.position.y, 'enemyExplosion');
-    let explode = this.game.add.sprite(enemy.position.x, shotPos.position.y, 'enemyExplosion');
+    let explode = this.game.add.sprite(shotPos.position.x, shotPos.position.y, 'enemyExplosion');
     explode.anchor.x = 0.5;
     explode.anchor.y = 0.5;
     explode.animations.add('kaboom');
     explode.play('kaboom', 35, false, true);
-    // this.explode.play();
+    this.explode.play();
     return killResult;
   }
 

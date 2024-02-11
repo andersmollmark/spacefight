@@ -34,6 +34,11 @@ class Mars extends AbstractChapter{
     // return new Mars(this.game);
   }
 
+  getNextChapterText() {
+    return "Not done";
+  }
+
+
   isEnemyOutsideScreen(enemy) {
     return enemy.y > 700;
   }

@@ -34,7 +34,7 @@ class Space extends AbstractChapter{
     return new Mars(this.game);
   }
 
-  getNextChaptertext() {
+    getNextChapterText() {
     return "Land on mars and destroy enemy base";
   }
 

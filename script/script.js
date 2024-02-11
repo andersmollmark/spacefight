@@ -35,7 +35,7 @@ function preload() {
     game.load.image('healthIcon', 'images/healthIcon.png');
 
     game.load.image('space', 'images/Space.png');
-    game.load.image('desert', 'images/desert1_big.png');
+    game.load.image('desert', 'images/desertTest5.jpg');
 
     game.load.image(CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_NAME, CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_PNG);
     game.load.image(CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_UP_NAME, CONSTANT_SERVICE.SHOTS.PLAYER_SHOT_UP_PNG);
@@ -82,8 +82,8 @@ function create() {
     spacebar = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
 
     //Music
-    // music = game.add.audio('missionImpossible');
-    // music.play();
+    music = game.add.audio('missionImpossible');
+    music.play();
 
     newChapterText = game.add.text(game.world.centerX, game.world.centerY, ' ', {font: '30px Arial', fill: '#fff'});
     newChapterText.anchor.setTo(0.5, 0.5);
@@ -197,43 +197,66 @@ function enemyFires() {
     //  Grab the first bullet we can from the pool
     enemyBullet = activeChapter.activeEnemies.bullets.getFirstExists(false);
     var livingEnemies = [];
+
     activeChapter.activeEnemies.group.forEachAlive(function (enemy) {
         livingEnemies.push(enemy);
 
-        if (activeChapter.activeEnemies.stay) {
-            if (enemy.body.velocity.x !== 0 && !enemy.hasStopped) {
-                if (activeChapter.activeEnemies.stayX && enemy.body.x <= activeChapter.activeEnemies.stayX) {
-                    enemy.body.oldvelocity = enemy.body.velocity.x;
-                    enemy.body.velocity.x = 0;
-                    enemy.timeToMove = game.time.now + activeChapter.activeEnemies.timeToStay;
-                    enemy.hasStopped = true;
-                }
-                else if (!activeChapter.activeEnemies.stayX && enemy.body.x <= game.world.width / 2) {
-                    enemy.body.oldvelocity = enemy.body.velocity.x;
-                    enemy.body.velocity.x = 0;
-                    enemy.timeToMove = game.time.now + activeChapter.activeEnemies.timeToStay;
-                    enemy.hasStopped = true;
-                }
+      if(activeChapter.backgroundImage.key !== 'space') {
+        console.log('stay:' + activeChapter.activeEnemies.stay +
+          ' enemy.body.velocity.y:' + enemy.body.velocity.y +
+          ' enemy.body.y:' + enemy.body.y +
+          ' activeChapter.activeEnemies.stayY:' + activeChapter.activeEnemies.stayY +
+        ' enemy.hasStopped:' + enemy.hasStopped);
+      }
 
-
-            }
-            else if (enemy.hasStopped && enemy.timeToMove < game.time.now) {
-                // console.log(enemy.name + ' shall start again and time is:' + game.time.now);
-                enemy.body.velocity.x = enemy.body.oldvelocity;
-                enemy.timeToMove = 0;
-            }
-        }
+      if(this.shouldEnemyStayX(enemy)) {
+        this.stopEnemy(enemy, enemy.body.velocity.x);
+      } else if(this.shouldEnemyStayY(enemy)) {
+        this.stopEnemy(enemy, enemy.body.velocity.y);
+      }
+      else if (enemy.hasStopped && enemy.timeToMove < game.time.now) {
+        enemy.body.velocity.x = enemy.body.oldvelocity;
+        enemy.timeToMove = 0;
+      }
     });
     if (player.isVisible() && enemyBullet && livingEnemies.length > 0) {
         var random = game.rnd.integerInRange(0, livingEnemies.length - 1);
         // randomly select one of them
         var shooter = livingEnemies[random];
         // And fire the bullet from this enemy
-        enemyBullet.reset(shooter.body.x, shooter.body.y);
+        let x = shooter.body.x, y = shooter.body.y;
+        if(activeChapter.activeEnemies.isBoss){
+          x = shooter.body.x + activeChapter.activeEnemies.shotX;
+          y = shooter.body.y + activeChapter.activeEnemies.shotY;
+        }
+        enemyBullet.reset(x, y);
 
         game.physics.arcade.moveToObject(enemyBullet, player.player, activeChapter.activeEnemies.bulletSpeed);
         firingTimer = game.time.now + activeChapter.activeEnemies.firingSpeed;
     }
+}
+
+function shouldEnemyStayX(enemy) {
+  return activeChapter.activeEnemies.stay &&
+    activeChapter.activeEnemies.stayX &&
+    !enemy.hasStopped &&
+    enemy.body.x <= activeChapter.activeEnemies.stayX &&
+    (enemy.body.velocity.x !== 0 || enemy.body.x <= game.world.width / 2);
+}
+
+function shouldEnemyStayY(enemy) {
+  return activeChapter.activeEnemies.stay &&
+    activeChapter.activeEnemies.stayY &&
+    !enemy.hasStopped &&
+    enemy.body.y >= activeChapter.activeEnemies.stayY &&
+    (enemy.body.velocity.y !== 0 || enemy.body.y <= game.world.height / 2);
+}
+
+function stopEnemy(enemy, velocity) {
+  enemy.body.oldvelocity = velocity;
+  enemy.body.velocity.y = 0;
+  enemy.timeToMove = game.time.now + activeChapter.activeEnemies.timeToStay;
+  enemy.hasStopped = true;
 }
 
 function checkEnemiesAlive() {
@@ -264,14 +287,16 @@ function checkEnemiesAlive() {
 }
 
 function prepareNewChapter() {
-    newChapterText.text = activeChapter.getNextChaptertext();
+    newChapterText.text = activeChapter.getNextChapterText();
     newChapterText.visible = true;
     activeChapter.startNewEnemyGroup = false;
     newChapter.active = true;
+    console.log('newChapter.active = true');
 }
 
 function startNewChapter() {
     newChapter.active = false;
+  console.log('newChapter.active = false');
     newChapterText.text = "";
     newChapterText.visible = false;
     var oldChapter = activeChapter;

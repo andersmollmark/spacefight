@@ -16,7 +16,7 @@ var CONSTANT_SERVICE = (function () {
             PLAYER_SHOT_SOUND: 'photonBomb',
             PLAYER_SHOT_3_SOUND: 'photonBomb3'
 
-        }
+        },
     };
 
     return service;

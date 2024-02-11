@@ -1,15 +1,15 @@
 class Abstractshot {
 
-  constructor(game, shotDesc) {
+  constructor(game, shotDescriptions) {
     this.game = game;
-    this.sound = game.add.audio(shotDesc.sound);
-    this.shotDesc = shotDesc;
     this.activeShotDescIndex = 0;
+    this.sound = game.add.audio(shotDescriptions[this.activeShotDescIndex].sound);
+    this.shotDescriptions = shotDescriptions;
     this.createShotgroup();
   }
 
   createShotgroup() {
-    var theShotDesc = this.shotDesc[this.activeShotDescIndex];
+    var theShotDesc = this.shotDescriptions[this.activeShotDescIndex];
     theShotDesc.shotGroup = [];
     console.log('creating shot with name:' + theShotDesc.name);
     for (var i = 0; i < theShotDesc.numberOfShots; i++) {
@@ -31,7 +31,7 @@ class Abstractshot {
   }
 
   getShotgroup() {
-    return this.shotDesc[this.activeShotDescIndex].shotGroup;
+    return this.shotDescriptions[this.activeShotDescIndex].shotGroup;
   }
 
   getDamage() {
@@ -39,17 +39,17 @@ class Abstractshot {
   }
 
   playSound() {
-    // this.sound.play();
+    this.sound.play();
   }
 
   setSound() {
-    this.sound = this.game.add.audio(this.shotDesc[this.activeShotDescIndex].sound);
+    this.sound = this.game.add.audio(this.shotDescriptions[this.activeShotDescIndex].sound);
   }
 
   upgradeShot(upgrade) {
     var newShotLevel = this.activeShotDescIndex + upgrade.upgradeNumber;
     console.log("try to upgrade shots to nr:" + newShotLevel);
-    if (newShotLevel < this.shotDesc.length) {
+    if (newShotLevel < this.shotDescriptions.length) {
       this.activeShotDescIndex = newShotLevel;
       this.createShotgroup();
       console.log("upgrading shots to nr:" + this.activeShotDescIndex);
