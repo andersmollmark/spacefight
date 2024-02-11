@@ -50,22 +50,15 @@ function preload() {
 
     game.load.image('chapter2', 'images/chapter2_mars.png');
 
-    var allEnemyPics = ALL_ENEMIES.getAllPictures();
-    for (var i = 0; i < allEnemyPics.length; i++) {
-        game.load.image(allEnemyPics[i].name, allEnemyPics[i].path);
-    }
+    loadGameDetails(ALL_ENEMIES.getAllPictures());
+    loadGameDetails(ALL_ENEMIES.getAllBullets());
+    loadGameDetails(ALL_ENEMIES.getAllSounds());
+}
 
-    var allEnemyBullets = ALL_ENEMIES.getAllBullets();
-    for (var i = 0; i < allEnemyBullets.length; i++) {
-        game.load.image(allEnemyBullets[i].name, allEnemyBullets[i].path);
-    }
-
-    var allEnemySounds = ALL_ENEMIES.getAllSounds();
-    for (var i = 0; i < allEnemySounds.length; i++) {
-        game.load.audio(allEnemySounds[i].name, allEnemySounds[i].path);
-    }
-
-
+function loadGameDetails(arrayWithDetails) {
+  arrayWithDetails.forEach(p=> {
+    game.load.image(p.name, p.path);
+  });
 }
 
 function create() {
@@ -271,7 +264,7 @@ function checkEnemiesAlive() {
 
     });
 
-    if (livingEnemies.length == 0) {
+    if (livingEnemies.length === 0) {
         if (!activeChapter.startNewEnemyGroup) {
             numberOfKilledEnemyGroups++;
             if (activeChapter.getNumberOfEnemies() <= numberOfKilledEnemyGroups) {
